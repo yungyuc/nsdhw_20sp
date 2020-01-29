@@ -34,6 +34,7 @@ jobs:
       run: |
         username=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
         branch=$(echo $GITHUB_REF | cut -d '/' -f 3)
+        echo $GITHUB_REF
         echo "branch name: $branch"
         branch_start="$username-hw0"
         if ! [[ $branch =~ ^$branch_start ]] ; then
