@@ -1,0 +1,38 @@
+name: hw0
+
+on:
+  pull_request:
+    branches:
+      - hw0
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+        matrix:
+          os: [ubuntu-18.04]
+
+        fail-fast: false
+
+    steps:
+
+    - name: setup
+      run: echo "::add-path::${HOME}/opt/conda/bin"
+
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: dependency (ubuntu)
+      if: matrix.os != 'macos-latest'
+      run: |
+        sudo apt-get -qy install python
+
+    - name: grade
+      run: |
+        username=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
+        echo "cd 20sp/hw0/$username"
+        cd 20sp/hw0/$username
+        ../validate.sh
