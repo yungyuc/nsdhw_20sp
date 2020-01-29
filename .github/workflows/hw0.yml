@@ -1,0 +1,47 @@
+name: hw0
+
+on:
+  pull_request:
+    branches:
+      - hw0
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+        matrix:
+          os: [ubuntu-18.04]
+
+        fail-fast: false
+
+    steps:
+
+    - name: setup
+      run: echo "::add-path::${HOME}/opt/conda/bin"
+
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: dependency (ubuntu)
+      if: matrix.os != 'macos-latest'
+      run: |
+        sudo apt-get -qy install python
+
+    - name: grade
+      run: |
+        # check head branch
+        branch=$GITHUB_HEAD_REF
+        echo "branch name: $branch"
+        username=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
+        branch_start="$username-hw0"
+        if ! [[ $branch =~ ^$branch_start ]] ; then
+          echo "branch name uses wrong format"
+          exit -1
+        fi
+        # validate
+        echo "cd hw0/$username"
+        cd hw0/$username
+        ../validate.sh
