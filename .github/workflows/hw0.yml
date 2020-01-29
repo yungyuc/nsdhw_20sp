@@ -32,7 +32,16 @@ jobs:
 
     - name: grade
       run: |
+        # check head branch
+        branch=$GITHUB_HEAD_REF
+        echo "branch name: $branch"
         username=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
-        echo "cd 20sp/hw0/$username"
-        cd 20sp/hw0/$username
+        branch_start="$username-hw0"
+        if ! [[ $branch =~ ^$branch_start ]] ; then
+          echo "branch name uses wrong format"
+          exit -1
+        fi
+        # validate
+        echo "cd hw0/$username"
+        cd hw0/$username
         ../validate.sh
