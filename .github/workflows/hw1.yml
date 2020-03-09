@@ -1,6 +1,9 @@
 name: hw1
 
 on:
+  push:
+    branches:
+      - **hw1**
   pull_request:
     branches:
       - hw1
