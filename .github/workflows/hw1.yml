@@ -33,6 +33,6 @@ jobs:
     - name: grade
       run: |
         username=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
-        echo "cd 20sp/hw1/$username"
-        cd 20sp/hw1/$username
+        echo "cd hw1/$username"
+        cd hw1/$username
         ../validate.sh
