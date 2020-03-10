@@ -22,7 +22,10 @@ jobs:
     steps:
 
     - name: setup
-      run: echo "::add-path::${HOME}/opt/conda/bin"
+      run: |
+        echo "::add-path::${HOME}/opt/conda/bin"
+        echo $GITHUB_REPOSITORY
+        echo $GITHUB_REF
 
     - uses: actions/checkout@v1
       with:
@@ -35,7 +38,7 @@ jobs:
 
     - name: grade
       run: |
-        username=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
+        username=$(echo $GITHUB_REF | cut -d '/' -f 3 | cut -d '-' -f 1)
         echo "cd hw1/$username"
         cd hw1/$username
         ../validate.sh
