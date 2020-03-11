@@ -22,7 +22,14 @@ jobs:
     steps:
 
     - name: setup
-      run: echo "::add-path::${HOME}/opt/conda/bin"
+      run: |
+        echo "::add-path::${HOME}/opt/conda/bin"
+        echo $GITHUB_REPOSITORY
+        echo $GITHUB_REF
+        echo ${{ github.event.pull_request.head.ref }}
+        echo ${{ github.event.pull_request.head }}
+        echo ${{ github.event.pull_request.user.login }}
+        echo ${{ github.event.pull_request.head.user.login }}
 
     - uses: actions/checkout@v1
       with:
@@ -35,7 +42,7 @@ jobs:
 
     - name: grade
       run: |
-        username=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
+        username=$( [ -z "${{ github.event.pull_request.head.user.login }}" ] && echo $GITHUB_REF | cut -d '/' -f 3 | cut -d '-' -f 1 || echo ${{ github.event.pull_request.head.user.login }})
         echo "cd hw1/$username"
         cd hw1/$username
         ../validate.sh
