@@ -42,8 +42,7 @@ jobs:
 
     - name: grade
       run: |
-        username=$(echo ${{ github.event.pull_request.head.user.login }})
-        username=$( [ -z "$username" ] && echo $GITHUB_REF | cut -d '/' -f 3 | cut -d '-' -f 1)
+        username=$( [ -z "${{ github.event.pull_request.head.user.login }}" ] && echo $GITHUB_REF | cut -d '/' -f 3 | cut -d '-' -f 1 || echo ${{ github.event.pull_request.head.user.login }})
         echo "cd hw1/$username"
         cd hw1/$username
         ../validate.sh
