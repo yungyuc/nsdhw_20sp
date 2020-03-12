@@ -51,4 +51,6 @@ run the following commands:
   cd nsdhw_20sp/hw1/username
   ../validate.sh | grep "GET POINT"
 
+The grader reserves the right to modify the final score according to the student's implementation.
+
 .. vim: set ft=rst ff=unix fenc=utf8 et sw=2 ts=2 sts=2:
