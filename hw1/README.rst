@@ -18,9 +18,12 @@ directory.  You may not touch anything else.  Failure to follow may cost you
 points.
 
 Please make sure your PR passes the Github Action CI, and is compatible with
-the latest NSD AMI on AWS (it uses Ubuntu 18.04 LTS) in ``us-east-1``.  You are
-not required to use the AMI for doing the homework, but the grader is.  If your
-code fails to build or run on it, **you can lose all points**.
+the latest NSD AMI on AWS (it uses Ubuntu 18.04 LTS) in ``us-east-1``.  (Your
+branch name should start with ``<username>-hw1**``, e.g,
+``yungyuc-hw1-attempt1``.  See the CI configuration file and the Github Action
+documentation.)  You are not required to use the AMI for doing the homework,
+but the grader is.  If your code fails to build or run on it, **you can lose
+all points**.
 
 Everyone should write his/her own code.  It is OK to discuss, but there should
 not be duplicated code.  If duplication is found, **all points** for the
@@ -46,6 +49,8 @@ run the following commands:
 .. code-block:: bash
 
   cd nsdhw_20sp/hw1/username
-  ../validate.py | grep "GET POINT"
+  ../validate.sh | grep "GET POINT"
+
+The grader reserves the right to modify the final score according to the student's implementation.
 
 .. vim: set ft=rst ff=unix fenc=utf8 et sw=2 ts=2 sts=2:
