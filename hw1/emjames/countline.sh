@@ -5,9 +5,9 @@ if [[ $# -lt 1 ]]; then
 elif [[ $# -gt 1 ]]; then
   echo $'only one argument is allowed \n'
 elif [[ ! -e $1 ]]; then
-  echo $'$1 not found \n'
+  printf "%s not found \n" "$1"
 else
   lines=$(grep -c ^ $1)
-  echo $'$lines lines in $1 \n'
+  printf "%s lines in %s \n" "$lines" "$1"  
 fi
 
