@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/bash
 
 if [[ $# -lt 1 ]]; then
   echo $'missing file name \n'

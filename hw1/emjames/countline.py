@@ -1,10 +1,11 @@
-#!/usr/bin/sh
+#!/bin/bash
 # shell command
 """:"
 # check the environment variable PYTHON_BIN to use the proper Python executable
 pybin=$PYTHON_BIN
 
-if [[ -x $pybin ]]; then
+#if [[ -x $pybin ]]; then
+if [[ -x "$(command -v $pybin)" ]]; then
   exec $pybin $0 "$@"
 else
   exit 127
