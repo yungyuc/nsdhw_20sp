@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if `test $# -lt 1`; then
     echo "missing file name"
 elif `test $# -gt 1`; then
@@ -12,7 +11,6 @@ else
         do
             let count+=1
         done < $fname
-        let count+=1
         echo "$count lines in $fname"
     else
         echo "$fname not found"
