@@ -32,8 +32,8 @@ The validating script (``validate.sh``) does not cover all conditions.  It is
 not the sole standard for grading.  The grader may only use it as reference and
 has the right to modify the final score according to the student's
 implementation.  But the script can help you understand what to do for the
-homework assignment.  Ask the grader or the instructor if you have any
-questions.
+homework assignment (see the "`GRADING NOTE`" in it).  Ask the grader or the
+instructor if you have any questions.
 
 Question 1
 ==========
@@ -96,7 +96,7 @@ copy-n-paste the class declaration.
 In a sub-directory under your ``$WORK`` directory, the code needs to be built
 by executing ``make``.  When a source file changes, ``make`` needs to pick it
 up and rebuild.  ``make run`` needs to produce the correct terminal output,
-without crashing.  ``make check`` redirect the terminal output to a file
+without crashing.  ``make check`` redirects the terminal output to a file
 ``result.txt``.  ``make clean`` needs to remove all the built and intermediate
 files.
 
