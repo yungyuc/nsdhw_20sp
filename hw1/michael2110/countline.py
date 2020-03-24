@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 '''.'
 export PYTHON_BIN 
 exec "$PYTHON_BIN" "$0" "$@"
-exit 0
+exit 1
 '.'''
 
 import sys
