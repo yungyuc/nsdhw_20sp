@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-'''.'
-export PYTHON_BIN 
+''':'
+export PYTHON_BIN=python3
 exec "$PYTHON_BIN" "$0" "$@"
 exit 1
-'.'''
+':'''
 
 import sys
 import os.path
