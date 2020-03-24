@@ -3,7 +3,7 @@
 ''':'
 export PYTHON_BIN=python3
 exec "$PYTHON_BIN" "$0" "$@"
-exit 1
+exit 0
 ':'''
 
 import sys
