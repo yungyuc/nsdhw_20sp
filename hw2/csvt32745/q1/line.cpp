@@ -1,22 +1,48 @@
 #include <iostream>
+#include <vector>
 
 class Line
 {
 public:
-    Line();
-    Line(Line const & );
-    Line(Line       &&);
+    // Basic build-in function
+    Line(){};
+    Line(Line const &l2){
+        mSize = l2.size();
+        mX = std::vector<float> (l2.getXs());
+        mY = std::vector<float> (l2.getYs());
+    }
+
     Line & operator=(Line const & );
     Line & operator=(Line       &&);
-    Line(size_t size);
-    ~Line();
-    size_t size() const;
-    float & x(size_t it) const;
-    float & x(size_t it);
-    float & y(size_t it) const;
-    float & y(size_t it);
+    Line(size_t size)
+    {
+        mSize = size;
+        mX.resize(size);
+        mY.resize(size);
+    }
+    
+    ~Line(){
+        mX.clear();
+        mY.clear();
+    }
+    
+    // Method
+    size_t size() const { return mSize; }
+
+    float const & x(size_t it) const { return mX[it]; }
+    float & x(size_t it) { return mX[it]; }
+    std::vector<float> const & getXs() const { return mX; }
+
+    float const & y(size_t it) const { return mY[it]; }
+    float & y(size_t it) { return mY[it]; }
+    std::vector<float> const & getYs() const { return mY; }
+
 private:
     // Member data.
+    int mSize = 0;
+    std::vector<float> mX;
+    std::vector<float> mY;
+
 }; /* end class Line */
 
 // Testcase
