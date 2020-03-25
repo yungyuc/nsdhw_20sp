@@ -137,12 +137,10 @@ echo "GET POINT 1 (if testing is sufficient)"
 echo "make test:"
 make test ; ret=$?
 if [ $ret -ne 0 ] ; then echo "failure" ; exit 1 ; fi
-exit 0
 
 echo "make clean:"
 make clean ; ret=$?
 if [ $ret -ne 0 ] ; then echo "failure" ; exit 1 ; fi
-exit 0
 
 sofiles="$(ls *.so)"
 echo "sofiles: $sofiles"
