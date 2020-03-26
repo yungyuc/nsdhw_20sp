@@ -12,4 +12,4 @@ clean:
 
 .PHONY: test
 test:
-	python3 -c "import _vector; print(_vector.radian_between_2dvecs([1, 0], [0, 1]))"
+	python3 pytest.py -v
