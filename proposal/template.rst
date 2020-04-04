@@ -2,17 +2,17 @@
 Proposal for [project name]
 ===========================
 
-This is a template for a proposal that specify what your project is and how it
-should be executed.  You are encouraged to use `reStructuredText
-<https://docutils.sourceforge.io/rst.html>`__ (which is the format employed by
-this template).  The plain-text format makes it easier for the instructor to
-comment in your GitHub pull requests.  You may use another document format if
-it is more suitable to your project.
+This is a template for a proposal that specifies what your project is and the
+execution plan.  You are encouraged to use `reStructuredText
+<https://docutils.sourceforge.io/rst.html>`__ (which is employed by this
+template).  The plain-text format makes it easier for the instructor to comment
+in your GitHub pull requests.  You may use another document format if it is
+more suitable to your project.
 
 Basic information
 =================
 
-The GitHub repository for your term project.
+The GitHub repository (URL) hosting your term project.
 
 Here before everything, you may write a simple statement (preferably one
 sentence) to introduce the project.
