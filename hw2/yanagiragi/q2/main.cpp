@@ -7,10 +7,10 @@ float calculate(std::vector<float> &first, std::vector<float> &second) {
     const float first_y = first[1];
     const float second_x = second[0];
     const float second_y = second[1];
-    const float x = first_x - second_x;
-    const float y = first_y - second_y;
-    const float magnitude = sqrtf(x * x + y * y);
-    return std::atan2(y / magnitude, x / magnitude);
+    const float dot = first_x * second_x + first_y * second_y;
+    const float first_magnitude = sqrtf(first_x * first_x + first_y * first_y);
+    const float second_magnitude = sqrtf(second_x * second_x + second_y * second_y);
+    return std::acos( dot / (first_magnitude * second_magnitude) );
 }
 
 PYBIND11_MODULE(example, m) {

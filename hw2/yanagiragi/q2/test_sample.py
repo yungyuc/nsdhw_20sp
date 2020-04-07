@@ -6,6 +6,10 @@ import math
 def test_answer():
     first = [1,2]
     second = [3,4]
-    diff = np.array(first) - np.array(second)
-    diff = diff / np.linalg.norm(diff)
-    assert abs(example.calc(first, second) - math.atan2(diff[1], diff[0])) < 0.0001
+    ans = math.acos( np.dot(first, second) / (np.linalg.norm(first) * np.linalg.norm(second)) )
+    err = abs(example.calc(first, second) - ans)
+    print('Error = {}'.format(err))
+    assert abs(err) < 1e-9
+
+if __name__ == "__main__":
+    test_answer()
