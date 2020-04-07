@@ -1,6 +1,6 @@
-PYTHON_BIN=/usr/bin/python3.6
+PYTHON_BIN=python3
 all:
-	c++ -O3 -Wall -shared -std=c++11 -fPIC `$(PYTHON_BIN) -m pybind11 --includes` main.cpp -o example`python3-config --extension-suffix`
+	c++ -O3 -Wall -shared -std=c++11 -fPIC `$(PYTHON_BIN) -m pybind11 --includes` main.cpp -o _vector`python3-config --extension-suffix`
 clean:
 	rm -f example`python3-config --extension-suffix`
 test:

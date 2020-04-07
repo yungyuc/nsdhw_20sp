@@ -13,7 +13,7 @@ float calculate(std::vector<float> &first, std::vector<float> &second) {
     return std::acos( dot / (first_magnitude * second_magnitude) );
 }
 
-PYBIND11_MODULE(example, m) {
+PYBIND11_MODULE(_vector, m) {
     m.doc() = "nsdhw_20sp hw2 (yanagiragi)"; // optional module docstring
     m.def("calc", &calculate, "Calculates the angle (in radians) between two vectors in the 2-dimensional Cartesian coordinate system");
 }
