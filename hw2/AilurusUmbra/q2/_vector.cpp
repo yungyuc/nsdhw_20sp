@@ -39,9 +39,9 @@ float get_angle(const Point& p1, const Point& p2){
         return acos(a);
 }
 
-PYBIND11_MODULE(angle, m) {
+PYBIND11_MODULE(_vector, m) {
   
-  py::class_<Point>(m, "_vector")
+  py::class_<Point>(m, "_Point")
         .def(py::init<float, float>());
 
   m.def("get_angle",
