@@ -60,3 +60,4 @@ jobs:
         echo "cd hw3/$username"
         cd hw3/$username
         ../validate.sh
+        cat ./performance.txt
