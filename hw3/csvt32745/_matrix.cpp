@@ -175,7 +175,7 @@ Matrix multiply_mkl(const Matrix& a, const Matrix& b)
     m, n, k, 1,
     a.data(), k,
     b.data(), n,
-    1, c.data(), n);
+    0, c.data(), n);
 
     return c;
 }

@@ -40,6 +40,10 @@ default: _matrix
 _matrix: _matrix.cpp
 	${CXX} $^ ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
 
+.PHONY: test
+test:
+	python3 -m pytest -v -s
+
 .PHONY: clean
 clean:
 	rm -rf *.o *.dSYM/ ${BINS}
