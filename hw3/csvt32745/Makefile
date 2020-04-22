@@ -4,7 +4,7 @@ UNAME_S := $(shell uname -s)
 
 # ifeq ($(UNAME_S),Darwin)
 MKLROOT ?= /opt/intel/mkl
-MKLEXT ?= a
+MKLEXT ?= so
 CXXFLAGS :=
 # endif
 
@@ -23,15 +23,15 @@ MKLLINKLINE := \
 PYBINDLINE := \
 	-O3 -Wall -shared -std=c++11 \
 	-fPIC `python3 -m pybind11 --includes` \
-	#$^ -o $@`python3-config --extension-suffix`
+	# $^ -o $@`python3-config --extension-suffix`
 
 CXX = g++
 CXXFLAGS := ${CXXFLAGS} \
-	$(PYBINDLINE)
+	-I${MKLROOT}/include \
+	${PYBINDLINE} \
+	${MKLLINKLINE}
 	# -std=c++17 -O3 -g -m64 \
-	# ${FLAGS}
-	# -I${MKLROOT}/include \
-	# ${MKLLINKLINE} \
+	# ${FLAGS} \
 
 .PHONY: default
 default: _matrix
