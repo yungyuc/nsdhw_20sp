@@ -59,4 +59,5 @@ jobs:
         username=$( [ -z "${{ github.event.pull_request.user.login }}" ] && echo $GITHUB_REPOSITORY | cut -d '/' -f 1 || echo ${{ github.event.pull_request.user.login }})
         echo "cd hw3/$username"
         cd hw3/$username
-        ../validate.sh
+        ../validate.py
+        cat ./performance.txt
