@@ -1,5 +1,5 @@
 
-<!-- Please fill the following checkboxs -->
+<!-- Please fill the following checkboxes -->
 ---
 A good PR should include the following parts:
 
