@@ -2,17 +2,17 @@ FLAGS ?=
 
 UNAME_S := $(shell uname -s)
 
-# ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S),Darwin)
 MKLROOT ?= /opt/intel/mkl
 MKLEXT ?= so
 CXXFLAGS :=
-# endif
+endif
 
-# ifeq ($(UNAME_S),Linux)
-# MKLROOT ?= ${HOME}/opt/conda
-# MKLEXT ?= so
-# CXXFLAGS := -Wl,--no-as-needed
-# endif
+ifeq ($(UNAME_S),Linux)
+MKLROOT ?= ${HOME}/opt/conda
+MKLEXT ?= so
+CXXFLAGS := -Wl,--no-as-needed
+endif
 
 MKLLINKLINE := \
 	${MKLROOT}/lib/libmkl_intel_lp64.${MKLEXT} \
