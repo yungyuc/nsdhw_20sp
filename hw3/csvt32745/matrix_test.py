@@ -12,10 +12,32 @@ class matrix_test(unittest.TestCase):
         self.n = rd.randint(100, 500)
         self.k = rd.randint(300, 500)
 
-    def testCorrectnessRandom(self):
+    def testMultiplication(self):
+        print(" size m={}, k={}, n={} ".format(self.m, self.k, self.n))
         a = Matrix(rd.random((self.m, self.k)))
         b = Matrix(rd.random((self.k, self.n)))
-        self.assertTrue(np.allclose(multiply_naive(a, b), multiply_mkl(a,b)))
+        ans_nav = multiply_naive(a, b)
+        ans_mkl = multiply_mkl(a, b)
+
+        self.assertEqual(ans_nav.nrow, self.m)
+        self.assertEqual(ans_nav.ncol, self.n)
+        self.assertEqual(ans_mkl.nrow, self.m)
+        self.assertEqual(ans_mkl.ncol, self.n)
+
+        # self.assertEqual(ans_nav, ans_mkl)
+        self.assertTrue(np.allclose(ans_nav, ans_mkl))
+
+    def testConstructor(self):
+        a = Matrix(rd.random((self.m, self.m)))
+        b = Matrix(self.m, self.n)
+        c = Matrix(a)
+
+        self.assertEqual(a.nrow, a.ncol)
+        self.assertEqual(a.nrow, b.nrow)
+        self.assertEqual(a.nrow, c.nrow)
+        self.assertEqual(a.ncol, c.ncol)
+        self.assertEqual(a, c)
+        self.assertNotEqual(id(a), id(c))
 
     # def testTime(self):
     #     m = 1234
@@ -44,9 +66,6 @@ class matrix_test(unittest.TestCase):
     #         f.close()
 
         
-
-
-
 
 if __name__ == "__main__":
     unittest.main()
