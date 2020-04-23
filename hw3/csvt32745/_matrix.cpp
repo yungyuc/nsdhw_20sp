@@ -103,6 +103,25 @@ class Matrix{
         return *this;
     }
 
+    bool operator==(Matrix const & other)
+    {
+        if (this == &other) { return true; }
+        if (m_nrow != other.m_nrow || m_ncol != other.m_ncol)
+        {
+            return false;
+        }
+        
+        for (size_t i=0; i<m_nrow; ++i)
+        {
+            for (size_t j=0; j<m_ncol; ++j)
+            {
+                if((*this)(i,j) != other(i,j))
+                    return false;
+            }
+        }
+        return true;
+    }
+
     /* 
         Methods
      */
@@ -188,6 +207,9 @@ PYBIND11_MODULE(_matrix, m){
         .def(py::init([](size_t r, size_t c) {return new Matrix(r, c);}))
         .def(py::init<Matrix&>())
         .def(py::init<std::vector<std::vector<double>>&>())
+        .def_property("nrow", &Matrix::nrow, nullptr)
+        .def_property("ncol", &Matrix::ncol, nullptr)
+        .def("__eq__", &Matrix::operator==)
         .def("__repr__", &Matrix::reprString)
         .def_buffer([](Matrix &m) -> py::buffer_info{
             return py::buffer_info(

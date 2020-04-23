@@ -18,8 +18,8 @@ MKLLINKLINE := \
 	${MKLROOT}/lib/libmkl_intel_lp64.${MKLEXT} \
 	${MKLROOT}/lib/libmkl_sequential.${MKLEXT} \
 	${MKLROOT}/lib/libmkl_core.${MKLEXT} \
-	${MKLROOT}/lib/libmkl_avx2.${MKLEXT} \
-	-lpthread -lm -ldl
+	${MKLROOT}/lib/libmkl_avx2.${MKLEXT}
+	
 
 PYBINDLINE := \
 	-O3 -Wall -shared -std=c++11 \
@@ -31,19 +31,21 @@ CXXFLAGS := ${CXXFLAGS} \
 	-I${MKLROOT}/include \
 	${PYBINDLINE} \
 	${MKLLINKLINE} \
-	# -std=c++17 -O3 -g -m64 \
-	# ${FLAGS} \
+	-lpthread -lm -ldl
+
+SRC_NAME=_matrix
 
 .PHONY: default
 default: _matrix
 
 _matrix: _matrix.cpp
 	${CXX} $^ ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
-
+	
 .PHONY: test
 test:
+	${CXX} ${SRC_NAME}.cpp ${CXXFLAGS} -o ${SRC_NAME}`python3-config --extension-suffix` 
 	python3 -m pytest -v -s
 
 .PHONY: clean
 clean:
-	rm -rf *.o *.dSYM/ ${BINS}
+	rm -rf *.so
