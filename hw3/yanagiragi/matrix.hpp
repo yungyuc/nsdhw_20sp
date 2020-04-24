@@ -112,11 +112,14 @@ class Matrix {
         double buffer(size_t i) const { return m_buffer[i]; }
         std::vector<double> buffer_vector() const { return std::vector<double>(m_buffer, m_buffer+size()); }
 
+        double * data() const { return m_buffer; }
+
     private:
 
         size_t index(size_t row, size_t col) const
         {
-            return row + col * m_nrow;
+            // return row + col * m_nrow;
+            return col + row * m_ncol;
         }
 
         void reset_buffer(size_t nrow, size_t ncol)

@@ -1,5 +1,7 @@
 #include "matrix.hpp"
 
+#include <mkl.h>
+
 std::ostream & operator<< (std::ostream & ostr, Matrix const & mat)
 {
     for (size_t i=0; i<mat.nrow(); ++i)
@@ -46,10 +48,77 @@ Matrix operator*(Matrix const & mat1, Matrix const & mat2)
 
 Matrix Matrix::multiply_naive (const Matrix &left, const Matrix& right) 
 {
-    return left; // TODO
+    if (left.ncol() != right.nrow()) {
+        throw std::out_of_range("Error Size");
+    }
+
+    Matrix ret(left.nrow(), right.ncol());
+
+    for(int i = 0; i < ret.nrow(); ++i) {
+        for (int j = 0; j < ret.ncol(); ++j) {
+            double v = 0;
+            for(int k = 0; k < left.ncol(); ++k) {
+                v += left(i, k) * right(k, j);
+            }
+            ret(i, j) = v;
+        }
+    }
+
+    return ret;
 }
 
 Matrix Matrix::multiply_mkl (const Matrix &left, const Matrix& right) 
 {
-    return left; // TODO
+    if (left.ncol() != right.nrow()) {
+        throw std::out_of_range("Error Size");
+    }
+    
+    Matrix ret(left.nrow(), right.ncol());
+
+    // row major version
+    /*int m = left.nrow();
+    int n = right.ncol();
+    int k = left.ncol(); // equal to right.nrow()
+
+    // Ref: https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
+    cblas_dgemm(
+        CblasRowMajor,  //
+        CblasNoTrans,   //
+        CblasNoTrans,   //     
+        m,              // M
+        n,              // N
+        k,              // K
+        1.0,            // ALPHA,
+        left.data(),    // A
+        k,              // LDA,
+        right.data(),   // B
+        n,              // LDB        
+        0.0,            // BETA,
+        ret.data(),     // C
+        n               // LDC
+    );*/
+
+    // col major version
+    int m = left.nrow();
+    int n = right.ncol();
+    int k = left.ncol(); // equal to right.nrow()
+
+    cblas_dgemm(
+        CblasColMajor,  //
+        CblasNoTrans,   //
+        CblasNoTrans,   //     
+        m,              // M
+        n,              // N
+        k,              // K
+        1.0,            // ALPHA,
+        left.data(),    // A
+        m,              // LDA,
+        right.data(),   // B
+        k,              // LDB        
+        0.0,            // BETA,
+        ret.data(),     // C
+        n               // LDC
+    );
+
+    return ret;
 }
