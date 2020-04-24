@@ -37,116 +37,120 @@ Matrix multiply_mkl (const Matrix &left, const Matrix& right)
     }
     
     Matrix ret(left.nrow(), right.ncol());
-    
-    // row major version
-    int m = left.nrow();
-    int n = right.ncol();
-    int k = left.ncol(); // equal to right.nrow()
 
     // Ref: https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
-    cblas_dgemm(
-        CblasRowMajor,  //
-        CblasNoTrans,   //
-        CblasNoTrans,   //     
-        m,              // M
-        n,              // N
-        k,              // K
-        1.0,            // ALPHA,
-        left.data(),    // A
-        k,              // LDA,
-        right.data(),   // B
-        n,              // LDB        
-        0.0,            // BETA,
-        ret.data(),     // C
-        n               // LDC
-    );
 
-    // col major version
-    /*int m = static_cast<int>( left.nrow() );
-    int n = static_cast<int>( right.ncol() );
-    int k = static_cast<int>( left.ncol() ); // equal to right.nrow()
+    int m = left.nrow();
+    int k = left.ncol();
+    int n = right.ncol();
 
-    std::cout << m << n << k << std::endl;
-
-    cblas_dgemm(
-        CblasColMajor,  //
-        CblasNoTrans,   //
-        CblasNoTrans,   //     
-        m,              // M
-        n,              // N
-        k,              // K
-        1.0,            // ALPHA,
-        left.data(),    // A
-        m,              // LDA,
-        right.data(),   // B
-        k,              // LDB        
-        0.0,            // BETA,
-        ret.data(),     // C
-        n               // LDC
-    );*/
-
+    #ifdef ROW_MAJOR
+        cblas_dgemm(        
+            CblasRowMajor,        
+            CblasNoTrans,   //
+            CblasNoTrans,   //     
+            m,              // M
+            n,              // N
+            k,              // K
+            1.0,            // ALPHA,
+            left.data(),    // A
+            left.ncol(),    // LDA,
+            right.data(),   // B
+            right.ncol(),   // LDB
+            0.0,            // BETA,
+            ret.data(),     // C
+            ret.ncol()      // LDC
+        );
+    #else
+        cblas_dgemm(        
+            CblasColMajor,        
+            CblasNoTrans,   //
+            CblasNoTrans,   //     
+            m,              // M
+            n,              // N
+            k,              // K
+            1.0,            // ALPHA,
+            left.data(),    // A
+            left.nrow(),    // LDA,
+            right.data(),   // B
+            right.nrow(),   // LDB        
+            0.0,            // BETA,
+            ret.data(),     // C
+            ret.nrow()      // LDC
+        );
+    #endif
     return ret;
 }
 
 PYBIND11_MODULE(_matrix, m) {
-    PyEval_InitThreads();
+
+    /*#ifdef ROW_MAJOR
+        printf("MKL: Use Row Major\n");
+    #else
+        printf("MKL: Use Col Major\n");
+    #endif*/
+    
     m.doc() = "nsdhw_20sp hw3 (yanagiragi)"; // optional module docstring
     m.def("multiply_mkl", &multiply_mkl);
     m.def("multiply_naive", &multiply_naive);
-    py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
+    py::class_<Matrix>(m, "Matrix", py::buffer_protocol())        
         
-        // constructors
-        .def(py::init<size_t, size_t>())
-        .def(py::init<size_t, size_t, std::vector<double>>())
-        
-        .def("ncol", &Matrix::ncol)
-        .def("nrow", &Matrix::nrow)
-        .def("data", &Matrix::data)
-        
-        // for output stream
-        .def("__str__", [](const Matrix &m){
-            const size_t ncol = m.ncol();
-            const size_t nrow = m.nrow();
-            std::string out;
+    // constructors
+    .def(py::init<size_t, size_t>())
+    .def(py::init<size_t, size_t, std::vector<double>>())
+    
+    // field
+    .def_property_readonly("nrow", &Matrix::nrow)
+    .def_property_readonly("ncol", &Matrix::ncol)
+    
+    // for output stream
+    .def("__str__", [](const Matrix &m){
+        const size_t ncol = m.ncol();
+        const size_t nrow = m.nrow();
+        std::string out;
+        out += std::string("[");
+        for(size_t i = 0; i < ncol; ++i) {
             out += std::string("[");
-            for(size_t i = 0; i < ncol; ++i) {
-                out += std::string("[");
-                for(size_t j = 0; j < nrow; ++j) {
-                    out += std::to_string(m(j, i));
-                    if (j != (nrow - 1)) {
-                        out += std::string(", ");
-                    }
-                }
-                out += std::string("]");
-                if (i != (ncol - 1)) {
-                    out += std::string(",\n");
+            for(size_t j = 0; j < nrow; ++j) {
+                out += std::to_string(m(j, i));
+                if (j != (nrow - 1)) {
+                    out += std::string(", ");
                 }
             }
             out += std::string("]");
-            return out;
-        })
+            if (i != (ncol - 1)) {
+                out += std::string(",\n");
+            }
+        }
+        out += std::string("]");
+        return out;
+    })
+
+    // for assertEqual
+    .def("__eq__", [](const Matrix &m1, const Matrix &m2){
+        if (m1.ncol() != m2.ncol() || m1.nrow() != m2.nrow()) {
+            return false;
+        }
         
-        /// Bare bones interface
-       .def("__getitem__", [](const Matrix &m, std::pair<size_t, size_t> i) {
-            if (i.first >= m.nrow() || i.second >= m.ncol())
-                throw py::index_error();
-            return m(i.first, i.second);
-        })
-       .def("__setitem__", [](Matrix &m, std::pair<size_t, size_t> i, float v) {
-            if (i.first >= m.nrow() || i.second >= m.ncol())
-                throw py::index_error();
-            m(i.first, i.second) = v;
-        })
-        
-        .def_buffer([](Matrix &m) -> py::buffer_info {
-            return py::buffer_info(
-                m.data(),                               /* Pointer to buffer */
-                sizeof(double),                          /* Size of one scalar */
-                py::format_descriptor<double>::format(), /* Python struct-style format descriptor */
-                2,                                      /* Number of dimensions */
-                { m.nrow(), m.ncol() },                 /* Buffer dimensions */
-                { sizeof(double) * m.ncol(),             /* Strides (in bytes) for each index */
-                sizeof(double) }
-            );
-        });
+        for(size_t i = 0; i < m1.ncol(); ++i) {
+            for(size_t j = 0; j < m1.nrow(); ++j) {
+                if ( m1(j, i) != m2(j, i)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    })
+    
+    /// Bare bones interface
+    .def("__getitem__", [](const Matrix &m, std::pair<size_t, size_t> i) {
+        if (i.first >= m.nrow() || i.second >= m.ncol())
+            throw py::index_error();
+        return m(i.first, i.second);
+    })
+    .def("__setitem__", [](Matrix &m, std::pair<size_t, size_t> i, float v) {
+        if (i.first >= m.nrow() || i.second >= m.ncol())
+            throw py::index_error();
+        m(i.first, i.second) = v;
+    });
 }

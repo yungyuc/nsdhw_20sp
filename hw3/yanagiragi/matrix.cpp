@@ -75,50 +75,46 @@ Matrix Matrix::multiply_mkl (const Matrix &left, const Matrix& right)
     
     Matrix ret(left.nrow(), right.ncol());
 
-    // row major version
-    /*int m = left.nrow();
-    int n = right.ncol();
-    int k = left.ncol(); // equal to right.nrow()
-
     // Ref: https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
-    cblas_dgemm(
-        CblasRowMajor,  //
-        CblasNoTrans,   //
-        CblasNoTrans,   //     
-        m,              // M
-        n,              // N
-        k,              // K
-        1.0,            // ALPHA,
-        left.data(),    // A
-        k,              // LDA,
-        right.data(),   // B
-        n,              // LDB        
-        0.0,            // BETA,
-        ret.data(),     // C
-        n               // LDC
-    );*/
 
-    // col major version
     int m = left.nrow();
+    int k = left.ncol();
     int n = right.ncol();
-    int k = left.ncol(); // equal to right.nrow()
 
-    cblas_dgemm(
-        CblasColMajor,  //
-        CblasNoTrans,   //
-        CblasNoTrans,   //     
-        m,              // M
-        n,              // N
-        k,              // K
-        1.0,            // ALPHA,
-        left.data(),    // A
-        m,              // LDA,
-        right.data(),   // B
-        k,              // LDB        
-        0.0,            // BETA,
-        ret.data(),     // C
-        n               // LDC
-    );
-
+    #ifdef ROW_MAJOR
+        cblas_dgemm(        
+            CblasRowMajor,        
+            CblasNoTrans,   //
+            CblasNoTrans,   //     
+            m,              // M
+            n,              // N
+            k,              // K
+            1.0,            // ALPHA,
+            left.data(),    // A
+            left.ncol(),    // LDA,
+            right.data(),   // B
+            right.ncol(),   // LDB
+            0.0,            // BETA,
+            ret.data(),     // C
+            ret.ncol()      // LDC
+        );
+    #else
+        cblas_dgemm(        
+            CblasColMajor,        
+            CblasNoTrans,   //
+            CblasNoTrans,   //     
+            m,              // M
+            n,              // N
+            k,              // K
+            1.0,            // ALPHA,
+            left.data(),    // A
+            left.nrow(),    // LDA,
+            right.data(),   // B
+            right.nrow(),   // LDB        
+            0.0,            // BETA,
+            ret.data(),     // C
+            ret.nrow()      // LDC
+        );
+    #endif
     return ret;
 }

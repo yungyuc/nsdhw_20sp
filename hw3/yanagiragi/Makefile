@@ -11,9 +11,11 @@ MKLLINKLINE := \
 	-lmkl_intel_lp64 -lmkl_core -lmkl_sequential \
 	-lpthread -lm -ldl -m64
 
-FLAGS=--std=c++11 -I${MKLROOT}/include ${MKLLINKLINE}
+MAJOR=ROW_MAJOR
 
 PYTHON_BIN=python3
+
+FLAGS=--std=c++11 -I${MKLROOT}/include ${MKLLINKLINE} -D $(MAJOR)
 
 # source /opt/intel/mkl/bin/mklvars.sh intel64
 # export LD_LIBRARY_PATH=/usr/local/lib:/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH

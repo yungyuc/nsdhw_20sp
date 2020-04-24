@@ -1,3 +1,5 @@
+#define COL_MAJOR // this code use column major
+
 #include "matrix.hpp"
 
 #include <iostream>
