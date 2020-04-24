@@ -118,8 +118,8 @@ class Matrix {
 
         size_t index(size_t row, size_t col) const
         {
-            // return row + col * m_nrow;
-            return col + row * m_ncol;
+            // return row + col * m_nrow; // col major
+            return col + row * m_ncol; // row major
         }
 
         void reset_buffer(size_t nrow, size_t ncol)

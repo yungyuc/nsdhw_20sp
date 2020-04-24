@@ -2,7 +2,7 @@ all: main
 
 CC=g++
 OUTPUTFILE=a.out
-CHECKFILE=result.txt
+CHECKFILE=performance.txt
 
 MKLROOT ?= /opt/intel/mkl
 MKLEXT ?= a
@@ -29,11 +29,14 @@ main.o: main.cpp matrix.hpp
 	$(CC) $(FLAGS) -c main.cpp
 
 pybind:
-	c++ -O3 -Wall -shared -std=c++11 -fPIC `$(PYTHON_BIN) -m pybind11 --includes` matrix_bind.cpp -o _vector`python3-config --extension-suffix` $(FLAGS)
+	c++ -O3 -Wall -shared -std=c++11 -fPIC `$(PYTHON_BIN) -m pybind11 --includes` matrix_bind.cpp -o _matrix`python3-config --extension-suffix` $(FLAGS)
+
+test: pybind
+	$(PYTHON_BIN) -m pytest ./test.py
 
 .PHONY:clean
 clean:
-	rm -f $(OUTPUTFILE) matrixls.o main.o $(CHECKFILE)
+	rm -f $(OUTPUTFILE) matrix.o main.o $(CHECKFILE) _matrix`python3-config --extension-suffix`
 
 run:
 	./$(OUTPUTFILE)
