@@ -5,13 +5,9 @@ OUTPUTFILE=a.out
 CHECKFILE=performance.txt
 
 # MKL root for conda
-MKL_ROOT=$HOME/opt/conda
-MKL_LIB_DIR=$MKL_ROOT/lib
-MKL_LIBS=$MKL_LIB_DIR/libmkl_def.so
-MKL_LIBS=$MKL_LIBS:$MKL_LIB_DIR/libmkl_avx2.so
-MKL_LIBS=$MKL_LIBS:$MKL_LIB_DIR/libmkl_core.so
-MKL_LIBS=$MKL_LIBS:$MKL_LIB_DIR/libmkl_intel_lp64.so
-MKL_LIBS=$MKL_LIBS:$MKL_LIB_DIR/libmkl_sequential.so
+MKL_ROOT=$(HOME)/opt/conda
+MKL_LIB_DIR=$(MKL_ROOT)/lib
+MKL_LIBS=$(MKL_LIB_DIR)/libmkl_def.so:$(MKL_LIB_DIR)/libmkl_avx2.so:$(MKL_LIB_DIR)/libmkl_core.so:$(MKL_LIB_DIR)/libmkl_intel_lp64.so:$(MKL_LIB_DIR)/libmkl_sequential.so
 
 # MKL Root for my WSL
 # MKLROOT ?= /opt/intel/mkl
@@ -22,7 +18,6 @@ MKL_LIBS=$MKL_LIBS:$MKL_LIB_DIR/libmkl_sequential.so
 
 MKLLINKLINE := \
 	-L/${MKL_LIB_DIR} \
-	-lmkl_intel_lp64 -lmkl_core -lmkl_sequential \
 	-lpthread -lm -ldl -m64
 
 MAJOR=ROW_MAJOR
