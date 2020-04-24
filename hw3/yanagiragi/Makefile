@@ -16,13 +16,16 @@ MKL_LIBS=$(MKL_LIB_DIR)/libmkl_def.so:$(MKL_LIB_DIR)/libmkl_avx2.so:$(MKL_LIB_DI
 	-lmkl_intel_lp64 -lmkl_core -lmkl_sequential \
 	-lpthread -lm -ldl -m64
 
+MKLEXT ?= so
 MKLLINKLINE := \
-	-L${MKL_LIB_DIR} \
-	-lpthread -lm -ldl -m64
+	${MKL_ROOT}/lib/libmkl_intel_lp64.${MKLEXT} \
+	${MKL_ROOT}/lib/libmkl_sequential.${MKLEXT} \
+	${MKL_ROOT}/lib/libmkl_core.${MKLEXT} \
+	${MKL_ROOT}/lib/libmkl_avx2.${MKLEXT}
 
 MAJOR=ROW_MAJOR
 PYTHON_BIN=python3
-FLAGS=--std=c++11 -I${MKL_ROOT}/include ${MKLLINKLINE} -D $(MAJOR)
+FLAGS=--std=c++11 -I${MKL_ROOT}/include ${MKLLINKLINE} -D $(MAJOR) -lpthread -lm -ldl
 
 # use this line on my development env
 # export LD_PRELOAD=/opt/intel/mkl/lib/intel64/libmkl_def.so:/opt/intel/mkl/lib/intel64/libmkl_avx2.so:/opt/intel/mkl/lib/intel64/libmkl_core.so:/opt/intel/mkl/lib/intel64/libmkl_intel_lp64.so:/opt/intel/mkl/lib/intel64/libmkl_intel_thread.so:/opt/intel/lib/intel64_lin/libiomp5.so
@@ -48,6 +51,3 @@ clean:
 
 run:
 	./$(OUTPUTFILE)
-
-check:
-	./$(OUTPUTFILE) > $(CHECKFILE)
