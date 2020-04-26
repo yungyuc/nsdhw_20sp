@@ -40,7 +40,7 @@ of data to be fed into the system to let the system *learn* the correct approxim
 wanted results.
 
 Deep Learning is one of the branch in Machine Learning Approach which provides good results.
-It uses artificiala neural network to do information processing and distributed communication
+It uses artificial neural network to do information processing and distributed communication
 which were inspired by biological systems. 
 
 In this project, we will use Deep Learning Approach that is usually powered by Back Propagation
@@ -83,7 +83,7 @@ Perspective users
 
 - Content Provider to generate tag for each content for easier recommendation
 - Social Media to generate tag to know the topic for each post (possibly prevent malicious usage or even for related content recommendation)
-- Forum Admin to generate tag for each content in its resposibility
+- Forum Admin to generate tag for each content in its responsibility
 - Medical Worker to generate tag (e.g. possible diseases) from patient written record
 
 System architecture
