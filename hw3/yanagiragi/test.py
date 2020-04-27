@@ -5,12 +5,12 @@ import time
 import pytest, unittest
 
 def measure_time(m, k, n):    
+    
     testIter = 10
     elapsed_naive = 0
     elapsed_mkl = 0
 
-    for idx in range(testIter):
-        
+    for idx in range(testIter):        
         a_np = np.random.randn(m, k)
         b_np = np.random.randn(k, n)            
 
@@ -21,12 +21,6 @@ def measure_time(m, k, n):
         c_mat_naive = _matrix.multiply_naive(a_mat, b_mat)
         end = time.time()
         elapsed_naive += end - start
-
-        a_np = np.random.randn(m, k)
-        b_np = np.random.randn(k, n)            
-
-        a_mat = _matrix.Matrix(m, k, a_np.flatten(order='C')) # row major, C for C-style
-        b_mat = _matrix.Matrix(k, n, b_np.flatten(order='C'))
 
         start = time.time()
         c_mat_mkl = _matrix.multiply_mkl(a_mat, b_mat)
@@ -44,8 +38,7 @@ class matrix_test(unittest.TestCase):
             measure_time(m, k, n)
 
     def test_answer(self):        
-        testIter = 100
-        
+        testIter = 100        
         for idx in range(testIter):
             
             m, n, k = np.random.randint(1, 10, size=3)
