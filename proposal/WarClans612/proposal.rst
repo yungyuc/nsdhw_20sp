@@ -162,7 +162,8 @@ Schedule
 - 05/25 - 05/30 -> Implementing Testing Module
 - 06/01 - 06/07 -> Implementing Unittesting
 - 06/08 - 06/14 -> Implementing User Level API
-- 06/15 - 06/22 -> Squashing Bug and Refactoring
+
+Squashing Bug and Refactoring done in each step.
 
 References
 ==========
