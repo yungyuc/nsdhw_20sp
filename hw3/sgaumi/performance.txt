@@ -1,0 +1,5 @@
+matrix 1 : 1155 rows 1285 columns
+matrix 2 : 1285 rows 1252 columns
+Performance test for matrix multiplication:
+multiply_naive : 26.34273052215576 seconds
+multiply_mkl : 0.11031007766723633 seconds
