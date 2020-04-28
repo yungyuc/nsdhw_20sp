@@ -19,6 +19,7 @@ MKLLINKLINE := \
 	${MKLROOT}/lib/libmkl_intel_lp64.${MKLEXT} \
 	${MKLROOT}/lib/libmkl_sequential.${MKLEXT} \
 	${MKLROOT}/lib/libmkl_core.${MKLEXT} \
+	${MKLROOT}/lib/libmkl_avx2.${MKLEXT}
 	-lpthread -lm -ldl
 
 PYBINDLINE := -fPIC `python3 -m pybind11 --includes` \
