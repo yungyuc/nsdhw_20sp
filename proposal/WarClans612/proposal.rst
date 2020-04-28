@@ -119,7 +119,6 @@ Modularization
 - Model saving module
 - Data Management Module
 - Config Management Module
-- Unittest Module
 - Example Module
 
 API description
