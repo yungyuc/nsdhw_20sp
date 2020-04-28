@@ -75,9 +75,9 @@ class test_python(unittest.TestCase):
 
 
 	def test_performancemul(self):
-		r=rd.randint(100,150)
-		c=rd.randint(100,150)
-		k=rd.randint(100,150)
+		r=rd.randint(1000,1500)
+		c=rd.randint(1000,1500)
+		k=rd.randint(1000,1500)
 		m1=Matrix(rd.random((r,k)))
 		m2=Matrix(rd.random((k,c)))
 		timer=[]
@@ -90,12 +90,12 @@ class test_python(unittest.TestCase):
 		i_mulcnaive=i
 		i+=1
 
-		timer_start=time.time()
-		mulp_naive=multiply_naive_python(m1,m2)
-		timer_stop=time.time()
-		timer.append(timer_stop-timer_start)
-		i_mulpnaive=i
-		i+=1
+#		timer_start=time.time()
+#		mulp_naive=multiply_naive_python(m1,m2)
+#		timer_stop=time.time()
+#		timer.append(timer_stop-timer_start)
+#		i_mulpnaive=i
+#		i+=1
 
 		timer_start=time.time()
 		mulc_mkl=multiply_mkl(m1,m2)
@@ -110,7 +110,7 @@ class test_python(unittest.TestCase):
 			fil.write("Performance test for matrix multiplication:\n")
 			fil.write("multiply_naive : {} seconds\n".format(timer[i_mulcnaive]))
 			fil.write("multiply_mkl : {} seconds\n".format(timer[i_mulcmkl]))
-			fil.write("( multiply_naive_python : {} seconds )\n".format(timer[i_mulpnaive]))
+			#fil.write("( multiply_naive_python : {} seconds )\n".format(timer[i_mulpnaive]))
 			fil.close()		
 
 		self.assertTrue(True)		
