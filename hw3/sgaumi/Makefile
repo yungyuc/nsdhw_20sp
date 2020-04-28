@@ -38,14 +38,14 @@ CXXFLAGS := ${CXXFLAGS} \
 default: Matrix
 
 matrix: Matrix.cpp
-	${CXX} ${CXXFLAGS} Matrix.cpp -o Matrix`python3-config --extension-suffix`
+	${CXX} ${CXXFLAGS} _matrix.cpp -o _matrix`python3-config --extension-suffix`
 
 .PHONY: test
 test:
-	${CXX} ${CXXFLAGS} Matrix.cpp -o Matrix`python3-config --extension-suffix`
+	${CXX} ${CXXFLAGS} _matrix.cpp -o _matrix`python3-config --extension-suffix`
 	pytest
 
 .PHONY: clean
 clean:
-	rm -frd *.so __pycache__ .pytest_cache performance.txt Matrix
+	rm -frd *.so __pycache__ .pytest_cache performance.txt _matrix
 	touch performance.txt

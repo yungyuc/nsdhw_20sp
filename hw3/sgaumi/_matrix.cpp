@@ -159,7 +159,7 @@ Matrix multiply_mkl(Matrix const& m1, Matrix const& m2)
     return m;
 }
 
-PYBIND11_MODULE(Matrix, m){
+PYBIND11_MODULE(_matrix, m){
     m.def("multiply_naive", &multiply_naive);
     m.def("multiply_mkl", &multiply_mkl);
 
