@@ -29,7 +29,10 @@ up with the growth pace of the internet itself, so we would like to make an auto
 this problem.
 
 Tagging generation can be described simpler as structured information extraction from unstructured
-information (such as text) to enable easier digestion of information and analysis.
+information (such as text) to enable easier digestion of information and analysis. The more data
+that is being trained for the model, the better the model will become. If the provided data is quite
+small, for example less than 100 for each possible tag, then it is better to have equal distribution
+of input that produce the same targeted tag to reduce wrong learning of the model.
 
 Math Behind the Problem
 -----------------
