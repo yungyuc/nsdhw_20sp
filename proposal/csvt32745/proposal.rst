@@ -8,6 +8,8 @@ Introduction
 .. Here before everything, you may write a simple statement (preferably one
 .. sentence) to introduce the project.
 
+Repository: `GodotMotionMatching <https://github.com/csvt32745/GodotMotionMatching>`__
+
 This project implements the Motion Matching technique as a plugin in `Godot <https://godotengine.org/>`_ engine, 
 one of the most famous open source game engines.
 
@@ -25,11 +27,11 @@ Problem to solve
 ..    problem.
 
 Background
-    In interaction animation field like Game, animations of avatars' are often recorded by motion caputre, 
-    and animators construct Animation State Machine with them.
-    As animations and according states increases, it's nightmare for creators to process them maually.
-    Hence game companies such as Ubisoft keep introducing animation processing technique to improve that problem.
-    One of the latest and widely used techniques is **Motion Matching**.
+    | In interaction animation field like Game, animations of avatars' are often recorded by motion caputre, 
+        and animators construct Animation State Machine with them.
+        As animations and according states increases, it's nightmare for creators to process them maually.
+    | Hence game companies such as Ubisoft keep introducing animation processing technique to improve that problem.
+        One of the latest and widely used techniques is **Motion Matching**.
 
 Algorithm 
     By applying Motion Matching, the segment of animation with the smallest error 
@@ -90,9 +92,10 @@ API description
 I will wrap my C++ module into Godot engine editor, and programmers are still allowed to call the plugin function by themselves.
 
 Compiling
-    Though the Godot engine executable is released directly, it needs to be re-compiled when binding other C++ modules.
-    And we need **SCons** to build the program according to `official instruction <https://docs.godotengine.org/en/latest/development/compiling/introduction_to_the_buildsystem.html>`__
-    The compilation part of this repository will include
+    | Though the Godot engine executable is released directly, it needs to be re-compiled when binding other C++ modules.
+    | And we need **SCons** to build the program according to `official instruction <https://docs.godotengine.org/en/latest/development/compiling/introduction_to_the_buildsystem.html>`__.
+    | The compilation part of this repository will include
+    
     - Source codes of C++ modules
     - Importing-script of engine
     - A SCons scipt 
@@ -132,8 +135,8 @@ Engineering infrastructure
 Architecture
     | I will implement Motion Matching as a C++ plugin in `Godot <https://godotengine.org/>`_ Engine,
     | Though scipts in Godot are written in High-Level language like C# and its own language - gdscript,
-     Godot is constructed with C++. Thefore I'm able to work in C++, with basic structures and functions offered by Godot.
-    |
+        Godot is constructed with C++. Thefore I'm able to work in C++, with basic structures and functions offered by Godot.
+    
     | Also, I will construct the workflow with my C++ plugins in high level scipts, which can be easily used in Godot editor,
      and programmers are able to call the C++ plugins and write their own scipts.
 
