@@ -29,12 +29,15 @@ def test_constructor():
   m, n, _ = get_rand_dim()
   m1 = Matrix(m, n)
   m2 = Matrix(m, n)
+
+  # At least one element is different
+  m1[0,0] = m2[0,0]+1
   for i in range(m):
     for j in range(n):
-      m1[i,j] = 666.666
-      m2[i,j] = 666.666
+      m1[i,j] = get_rand_float()
+      m2[i,j] = get_rand_float() 
 
-  assert(compareMat(m1, m2, m, n))
+  assert(compareMat(m1, m2, m, n) == False)
 
 def test_mat_dim():
   m, n, _ = get_rand_dim()
