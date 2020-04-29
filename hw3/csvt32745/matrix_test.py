@@ -39,31 +39,31 @@ class matrix_test(unittest.TestCase):
         self.assertEqual(a, c)
         self.assertNotEqual(id(a), id(c))
 
-    # def testTime(self):
-    #     m = 1234
-    #     n = 1234
-    #     k = 1234
-    #     a = Matrix(rd.random((m, k)))
-    #     b = Matrix(rd.random((k, n)))
+    def testTime(self):
+        m = 1234
+        n = 1234
+        k = 1234
+        a = Matrix(rd.random((m, k)))
+        b = Matrix(rd.random((k, n)))
 
-    #     timer_a = []
-    #     timer_b = []
-    #     for i in range(5):
-    #         timer = time.time()
-    #         ans_nav = multiply_naive(a, b)
-    #         timer_a.append(time.time() - timer)
+        timer_a = []
+        timer_b = []
+        for i in range(5):
+            timer = time.time()
+            ans_nav = multiply_naive(a, b)
+            timer_a.append(time.time() - timer)
 
-    #         timer = time.time()
-    #         ans_mkl = multiply_mkl(a,b)
-    #         timer_b.append(time.time() - timer)
-    #         self.assertTrue(np.allclose(ans_nav, ans_mkl))
+            timer = time.time()
+            ans_mkl = multiply_mkl(a,b)
+            timer_b.append(time.time() - timer)
+            self.assertTrue(np.allclose(ans_nav, ans_mkl))
         
-    #     with open("performance.txt", "w") as f:
-    #         f.write("Average time measured for 5 times\n")
-    #         f.write("size: m={} k={} n={}\n".format(m, k, n))
-    #         f.write("multiply_naive: {} secs\n".format("%.4f"%np.average(timer_a)))
-    #         f.write("multiply_mkl: {} secs\n".format("%.4f"%np.average(timer_b)))
-    #         f.close()
+        with open("performance.txt", "w") as f:
+            f.write("Average time measured for 5 times\n")
+            f.write("size: m={} k={} n={}\n".format(m, k, n))
+            f.write("multiply_naive: {} secs\n".format("%.4f"%np.average(timer_a)))
+            f.write("multiply_mkl: {} secs\n".format("%.4f"%np.average(timer_b)))
+            f.close()
 
         
 
