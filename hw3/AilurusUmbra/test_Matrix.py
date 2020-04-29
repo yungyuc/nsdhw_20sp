@@ -7,7 +7,7 @@ import time
 def get_rand_float(low=0, high=10, decimal=1):
   return np.random.randint(low, high, size=(1,1)).astype(float)
 
-def get_rand_dim(low=300, high=500):
+def get_rand_dim(low=1500, high=2500):
   m = np.random.randint(low, high)
   n = np.random.randint(low, high)
   k = np.random.randint(low, high)
