@@ -1,3 +1,3 @@
-multiply_mkl 0.08793497085571289
-multiply_naive 12.652209758758545
-ply_mkl use:0.08793497085571289multiply_naive use:12.652209758758545
+Start multiply_naive (repeat=5), take min = 4.170746921008686 seconds
+Start multiply_mkl (repeat=5), take min = 0.055143863006378524 seconds
+MKL speed-up over naive: 75.6339 x
