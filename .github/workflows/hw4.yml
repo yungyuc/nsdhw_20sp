@@ -57,6 +57,6 @@ jobs:
     - name: grade
       run: |
         username=$( [ -z "${{ github.event.pull_request.user.login }}" ] && echo $GITHUB_REPOSITORY | cut -d '/' -f 1 || echo ${{ github.event.pull_request.user.login }})
-        echo "cd 20sp/hw4/$username"
+        echo "cd hw4/$username"
         cd hw4/$username
         ../validate.py
