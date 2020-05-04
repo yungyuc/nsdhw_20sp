@@ -15,9 +15,9 @@ CXXFLAGS := -Wl,--no-as-needed
 endif
 
 MKLLINKLINE := \
-	${MKLROOT}/lib/intel64/libmkl_intel_lp64.${MKLEXT} \
-	${MKLROOT}/lib/intel64/libmkl_sequential.${MKLEXT} \
-	${MKLROOT}/lib/intel64/libmkl_core.${MKLEXT} \
+	${MKLROOT}/lib/libmkl_intel_lp64.${MKLEXT} \
+	${MKLROOT}/lib/libmkl_sequential.${MKLEXT} \
+	${MKLROOT}/lib/libmkl_core.${MKLEXT} \
 	-lpthread -lm -ldl
 
 CXX = g++
