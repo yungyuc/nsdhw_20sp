@@ -25,10 +25,10 @@ public:
     friend void validate_multiplication(const Matrix &mat1, const Matrix &mat2);
     friend Matrix multiply_naive(const Matrix &mat1, const Matrix &mat2);
     friend Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2);
-    friend Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t lsize);
+    friend Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t tsize);
 
     size_t index(size_t row, size_t col) const { return row*m_ncol + col; }
-    double   operator() (size_t row, size_t col) const { if (row >= m_nrow || col >= m_ncol) return trash; else return m_buffer.at( index(row, col) ); }
+    double   operator() (size_t row, size_t col) const { if (row >= m_nrow || col >= m_ncol) return 0; else return m_buffer.at( index(row, col) ); }
     double & operator() (size_t row, size_t col)       { if (row >= m_nrow || col >= m_ncol) return trash; else return m_buffer.at( index(row, col) ); }
 
     bool operator== (Matrix const &other)
@@ -40,8 +40,10 @@ public:
     }
 
     double *data() { return m_buffer.data(); }
-    size_t nrow() const { return (m_nrow+tsize-1)/tsize; } //Rounding up
-    size_t ncol() const { return (m_ncol+tsize-1)/tsize;; } //Rounding up
+    size_t row() const { return m_nrow; }
+    size_t col() const { return m_ncol; }
+    size_t nrow() const { return ((size_t)(m_nrow/tsize) + (m_nrow % tsize != 0))*tsize; } //Rounding up
+    size_t ncol() const { return ((size_t)(m_ncol/tsize) + (m_ncol % tsize != 0))*tsize; } //Rounding up
 
 private:
 
@@ -96,12 +98,11 @@ public:
     ~Block() = default; // default destructor
 
     size_t index(size_t row, size_t col) const { return row*NDIM + col; }
-    double   operator() (size_t row, size_t col) const { if (row >= NDIM || col >= NDIM) return trash; else return m_buffer.at( index(row, col) ); }
+    double   operator() (size_t row, size_t col) const { if (row >= NDIM || col >= NDIM) return 0; else return m_buffer.at( index(row, col) ); }
     double & operator() (size_t row, size_t col)       { if (row >= NDIM || col >= NDIM) return trash; else return m_buffer.at( index(row, col) ); }
 
     Block &operator= (double v);
     Block &operator+= (Block const &other);
-    Block &operator-= (Block const &other);
 
     void save(Matrix &mat, size_t it, size_t jt);
 
@@ -131,12 +132,6 @@ Block& Block::operator+= (Block const &other)
     return *this;
 }
 
-Block& Block::operator-= (Block const &other)
-{
-    for (size_t i=0; i<NDIM*NDIM; ++i) { m_buffer.at(i) -= other.m_buffer.at(i); }
-    return *this;
-}
-
 void Block::save(Matrix &mat, size_t it, size_t jt)
 {
     const size_t ncol = mat.ncol();
@@ -148,9 +143,11 @@ void Block::save(Matrix &mat, size_t it, size_t jt)
 
         for (size_t j=0; j<NDIM; ++j)
         {
-            size_t x = (base_t + j) / NDIM;
-            size_t y = (base_t + j) % NDIM;
-            mat(x, y) = m_buffer.at(base_s + j);
+            size_t x1 = (base_t + j) / mat.nrow();
+            size_t y1 = (base_t + j) % mat.nrow();
+            size_t x2 = (base_s + j) / NDIM;
+            size_t y2 = (base_s + j) % NDIM;
+            mat(x1, y1) = (*this)(x2, y2);
         }
     }
 }
@@ -203,8 +200,8 @@ void Tiler::load(
         {
             size_t x1 = (base_t + j) / NDIM;
             size_t y1 = (base_t + j) % NDIM;
-            size_t x2 = (base_s + j) / NDIM;
-            size_t y2 = (base_s + j) % NDIM;
+            size_t x2 = (base_s + j) / mat1.nrow();
+            size_t y2 = (base_s + j) % mat1.nrow();
             m_mat1(x1, y1) = mat1(x2, y2);
         }
     }
@@ -220,8 +217,8 @@ void Tiler::load(
         {
             size_t x1 = (base_t + j) / NDIM;
             size_t y1 = (base_t + j) % NDIM;
-            size_t x2 = (base_s + j) / NDIM;
-            size_t y2 = (base_s + j) % NDIM;
+            size_t x2 = (base_s + j) / mat2.nrow();
+            size_t y2 = (base_s + j) % mat2.nrow();
             m_ret(x1, y1) = mat2(x2, y2);
         }
     }
@@ -282,7 +279,7 @@ Matrix multiply_naive(const Matrix &mat1, const Matrix &mat2)
     validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
-    Matrix ret(mat1.m_nrow, mat2.m_ncol, 1);
+    Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
     for (size_t i=0; i<ret.m_nrow; ++i)
     {
@@ -304,7 +301,7 @@ Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2)
     validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
-    Matrix ret(mat1.m_nrow, mat2.m_ncol, 1);
+    Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
         mat1.m_nrow, mat2.m_ncol, mat1.m_ncol, 1.0,
@@ -322,12 +319,16 @@ Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t tsize)
     validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
-    Matrix ret(mat1.nrow(), mat2.ncol(), tsize);
+    Matrix ret(mat1.m_nrow, mat2.m_ncol, tsize);
 
     const size_t nrow1 = mat1.nrow();
     const size_t ncol1 = mat1.ncol();
     //const size_t nrow2 = mat2.nrow();
     const size_t ncol2 = mat2.ncol();
+
+    std::cout << tsize << " " << "nothing" << std::endl;
+    std::cout << nrow1 << " " << ncol2 << std::endl;
+    std::cout << mat1.m_nrow << " " << mat2.m_ncol << std::endl;
 
     const size_t ntrow1 = nrow1 / tsize;
     const size_t ntcol1 = ncol1 / tsize;
@@ -363,17 +364,16 @@ PYBIND11_MODULE(_matrix, m) {
         .def(py::init<size_t, size_t>())
         .def(py::init<Matrix const &>())
         .def(py::init<std::vector<std::vector<double>>&>())
-        //.def(py::init<Matrix &&>())
-        .def_property("nrow", &Matrix::nrow, nullptr)
-        .def_property("ncol", &Matrix::ncol, nullptr)
+        .def_property("nrow", &Matrix::row, nullptr)
+        .def_property("ncol", &Matrix::col, nullptr)
         .def_buffer([] (Matrix &m) -> py::buffer_info {
             return py::buffer_info(
                 m.data(),
                 sizeof(double),
                 py::format_descriptor<double>::format(),
                 2,
-                { m.nrow(), m.ncol() },
-                { sizeof(double) * m.ncol(), sizeof(double)}
+                { m.row(), m.col() },
+                { sizeof(double) * m.col(), sizeof(double)}
             );
         })
         .def("__eq__", &Matrix::operator==)
