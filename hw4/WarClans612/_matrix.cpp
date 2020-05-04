@@ -15,6 +15,7 @@ class Matrix {
 public:
 
     Matrix(size_t nrow, size_t ncol);
+    Matrix(size_t nrow, size_t ncol, size_t tsize);
     Matrix(Matrix const & other);
     Matrix(Matrix && other);
     Matrix(std::vector<std::vector<double>> const & other);
@@ -27,10 +28,8 @@ public:
     friend Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t lsize);
 
     size_t index(size_t row, size_t col) const { return row*m_ncol + col; }
-    double   operator() (size_t row, size_t col) const { return m_buffer.at( index(row, col) ); }
-    double & operator() (size_t row, size_t col)       { return m_buffer.at( index(row, col) ); }
-    double   operator[] (size_t idx) const { return m_buffer.at(idx); }
-    double & operator[] (size_t idx)       { return m_buffer.at(idx); }
+    double   operator() (size_t row, size_t col) const { if (row >= m_nrow || col >= m_ncol) return trash; else return m_buffer.at( index(row, col) ); }
+    double & operator() (size_t row, size_t col)       { if (row >= m_nrow || col >= m_ncol) return trash; else return m_buffer.at( index(row, col) ); }
 
     bool operator== (Matrix const &other)
     {
@@ -41,13 +40,15 @@ public:
     }
 
     double *data() { return m_buffer.data(); }
-    size_t nrow() const { return m_nrow; }
-    size_t ncol() const { return m_ncol; }
+    size_t nrow() const { return (m_nrow+tsize-1)/tsize; } //Rounding up
+    size_t ncol() const { return (m_ncol+tsize-1)/tsize;; } //Rounding up
 
 private:
 
     size_t m_nrow;
     size_t m_ncol;
+    size_t tsize=1;
+    double trash;
     std::vector<double> m_buffer;
 
 };
@@ -59,16 +60,22 @@ Matrix::Matrix(size_t nrow, size_t ncol)
     std::fill(m_buffer.begin(), m_buffer.end(), 0);
 }
 
+Matrix::Matrix(size_t nrow, size_t ncol, size_t tsize)
+    : m_nrow(nrow), m_ncol(ncol), tsize(tsize), m_buffer(nrow * ncol, 0)
+{
+    std::fill(m_buffer.begin(), m_buffer.end(), 0);
+}
+
 // copy constructor
 Matrix::Matrix(Matrix const & other)
-    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_buffer(other.m_nrow * other.m_ncol, 0)
+    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), tsize(other.tsize), m_buffer(other.m_nrow * other.m_ncol, 0)
 {
     std::copy(other.m_buffer.begin(), other.m_buffer.end(), m_buffer.begin());
 }
 
 // move constructor
 Matrix::Matrix(Matrix && other)
-    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_buffer(other.m_nrow * other.m_ncol, 0)
+    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), tsize(other.tsize), m_buffer(other.m_nrow * other.m_ncol, 0)
 {
     other.m_buffer.swap(m_buffer);
 }
@@ -88,17 +95,20 @@ public:
 
     ~Block() = default; // default destructor
 
-    double  operator[] (size_t idx) const { return m_buffer.at(idx); }
-    double &operator[] (size_t idx)       { return m_buffer.at(idx); }
+    size_t index(size_t row, size_t col) const { return row*NDIM + col; }
+    double   operator() (size_t row, size_t col) const { if (row >= NDIM || col >= NDIM) return trash; else return m_buffer.at( index(row, col) ); }
+    double & operator() (size_t row, size_t col)       { if (row >= NDIM || col >= NDIM) return trash; else return m_buffer.at( index(row, col) ); }
 
     Block &operator= (double v);
     Block &operator+= (Block const &other);
+    Block &operator-= (Block const &other);
 
     void save(Matrix &mat, size_t it, size_t jt);
 
 private:
 
     size_t NDIM;
+    double trash;
     std::vector<double> m_buffer;
 };
 
@@ -121,6 +131,12 @@ Block& Block::operator+= (Block const &other)
     return *this;
 }
 
+Block& Block::operator-= (Block const &other)
+{
+    for (size_t i=0; i<NDIM*NDIM; ++i) { m_buffer.at(i) -= other.m_buffer.at(i); }
+    return *this;
+}
+
 void Block::save(Matrix &mat, size_t it, size_t jt)
 {
     const size_t ncol = mat.ncol();
@@ -132,7 +148,9 @@ void Block::save(Matrix &mat, size_t it, size_t jt)
 
         for (size_t j=0; j<NDIM; ++j)
         {
-            mat[base_t + j] = m_buffer.at(base_s + j);
+            size_t x = (base_t + j) / NDIM;
+            size_t y = (base_t + j) % NDIM;
+            mat(x, y) = m_buffer.at(base_s + j);
         }
     }
 }
@@ -183,7 +201,11 @@ void Tiler::load(
 
         for (size_t j=0; j<NDIM; ++j)
         {
-            m_mat1[base_t + j] = mat1[base_s + j];
+            size_t x1 = (base_t + j) / NDIM;
+            size_t y1 = (base_t + j) % NDIM;
+            size_t x2 = (base_s + j) / NDIM;
+            size_t y2 = (base_s + j) % NDIM;
+            m_mat1(x1, y1) = mat1(x2, y2);
         }
     }
 
@@ -196,7 +218,11 @@ void Tiler::load(
 
         for (size_t j=0; j<NDIM; ++j)
         {
-            m_ret[base_t + j] = mat2[base_s + j];
+            size_t x1 = (base_t + j) / NDIM;
+            size_t y1 = (base_t + j) % NDIM;
+            size_t x2 = (base_s + j) / NDIM;
+            size_t y2 = (base_s + j) % NDIM;
+            m_ret(x1, y1) = mat2(x2, y2);
         }
     }
 
@@ -206,7 +232,11 @@ void Tiler::load(
 
         for (size_t j=0; j<NDIM; ++j)
         {
-            m_mat2[j*NDIM + i] = m_ret[base + j];
+            size_t x1 = (j*NDIM + i) / NDIM;
+            size_t y1 = (j*NDIM + i) % NDIM;
+            size_t x2 = (base + j) / NDIM;
+            size_t y2 = (base + j) % NDIM;
+            m_mat2(x1, y1) = m_ret(x2, y2);
         }
     }
 }
@@ -224,9 +254,15 @@ void Tiler::multiply()
             double v = 0;
             for (size_t j=0; j<NDIM; ++j)
             {
-                v += m_mat1[base1 + j] * m_mat2[base2 + j];
+                size_t x1 = (base1 + j) / NDIM;
+                size_t y1 = (base1 + j) % NDIM;
+                size_t x2 = (base2 + j) / NDIM;
+                size_t y2 = (base2 + j) % NDIM;
+                v += m_mat1(x1, y1) * m_mat2(x2, y2);
             }
-            m_ret[base1 + k] = v;
+            size_t x1 = (base1 + k) / NDIM;
+            size_t y1 = (base1 + k) % NDIM;
+            m_ret(x1, y1) = v;
         }
     }
 }
@@ -246,7 +282,7 @@ Matrix multiply_naive(const Matrix &mat1, const Matrix &mat2)
     validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
-    Matrix ret(mat1.m_nrow, mat2.m_ncol);
+    Matrix ret(mat1.m_nrow, mat2.m_ncol, 1);
 
     for (size_t i=0; i<ret.m_nrow; ++i)
     {
@@ -268,7 +304,7 @@ Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2)
     validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
-    Matrix ret(mat1.m_nrow, mat2.m_ncol);
+    Matrix ret(mat1.m_nrow, mat2.m_ncol, 1);
 
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
         mat1.m_nrow, mat2.m_ncol, mat1.m_ncol, 1.0,
@@ -280,15 +316,13 @@ Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2)
     return ret;
 };
 
-Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t lsize)
+Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t tsize)
 {
 
     validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
-    Matrix ret(mat1.nrow(), mat2.ncol());
-
-    const size_t tsize = lsize;// / sizeof(double);
+    Matrix ret(mat1.nrow(), mat2.ncol(), tsize);
 
     const size_t nrow1 = mat1.nrow();
     const size_t ncol1 = mat1.ncol();
