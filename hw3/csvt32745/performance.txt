@@ -1,0 +1,6 @@
+Average time measured for 5 times
+size: m=1234 k=1234 n=1234
+multiply_naive: 3.9724 secs
+multiply_mkl: 0.0840 secs
+=====================================
+test code is in matrix_test.py
