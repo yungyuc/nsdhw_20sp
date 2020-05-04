@@ -113,6 +113,6 @@ def test_performance():
         print('Average Time for multiply_tile17: {}'.format(tile17_timing), file=f)
         print('Average Time for multiply_tile19: {}'.format(tile19_timing), file=f)
 
-    assert naive_timing / tile16_timing <= 0.8
-    assert naive_timing / tile17_timing <= 0.8
-    assert naive_timing / tile19_timing <= 0.8
+    assert tile16_timing / naive_timing <= 0.8
+    assert tile17_timing / naive_timing <= 0.8
+    assert tile19_timing / naive_timing <= 0.8
