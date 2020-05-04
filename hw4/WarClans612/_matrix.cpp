@@ -10,12 +10,13 @@
 
 namespace py = pybind11;
 
+
 class Matrix {
 
 public:
 
     Matrix(size_t nrow, size_t ncol);
-    Matrix(size_t nrow, size_t ncol, size_t tsize);
+    Matrix(size_t nrow, size_t ncol, int lsize);
     Matrix(Matrix const & other);
     Matrix(Matrix && other);
     Matrix(std::vector<std::vector<double>> const & other);
@@ -25,7 +26,7 @@ public:
     friend void validate_multiplication(const Matrix &mat1, const Matrix &mat2);
     friend Matrix multiply_naive(const Matrix &mat1, const Matrix &mat2);
     friend Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2);
-    friend Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t tsize);
+    friend Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, int lsize);
 
     size_t index(size_t row, size_t col) const { return row*m_ncol + col; }
     double   operator() (size_t row, size_t col) const { if (row >= m_nrow || col >= m_ncol) return 0; else return m_buffer.at( index(row, col) ); }
@@ -40,16 +41,16 @@ public:
     }
 
     double *data() { return m_buffer.data(); }
-    size_t row() const { return m_nrow; }
-    size_t col() const { return m_ncol; }
-    size_t nrow() const { return ((size_t)(m_nrow/tsize) + (m_nrow % tsize != 0))*tsize; } //Rounding up
-    size_t ncol() const { return ((size_t)(m_ncol/tsize) + (m_ncol % tsize != 0))*tsize; } //Rounding up
+    size_t real_row() const { return m_nrow; }
+    size_t real_col() const { return m_ncol; }
+    int nrow() const { return ((m_nrow/tsize) + (m_nrow%tsize != 0))*tsize; }
+    int ncol() const { return ((m_ncol/tsize) + (m_ncol%tsize != 0))*tsize; }
+    int tsize = 1;
 
 private:
 
     size_t m_nrow;
     size_t m_ncol;
-    size_t tsize=1;
     double trash;
     std::vector<double> m_buffer;
 
@@ -62,22 +63,23 @@ Matrix::Matrix(size_t nrow, size_t ncol)
     std::fill(m_buffer.begin(), m_buffer.end(), 0);
 }
 
-Matrix::Matrix(size_t nrow, size_t ncol, size_t tsize)
-    : m_nrow(nrow), m_ncol(ncol), tsize(tsize), m_buffer(nrow * ncol, 0)
+Matrix::Matrix(size_t nrow, size_t ncol, int lsize)
+    : m_nrow(nrow), m_ncol(ncol), m_buffer(nrow * ncol, 0)
 {
     std::fill(m_buffer.begin(), m_buffer.end(), 0);
+    tsize = lsize;
 }
 
 // copy constructor
 Matrix::Matrix(Matrix const & other)
-    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), tsize(other.tsize), m_buffer(other.m_nrow * other.m_ncol, 0)
+    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_buffer(other.m_nrow * other.m_ncol, 0)
 {
     std::copy(other.m_buffer.begin(), other.m_buffer.end(), m_buffer.begin());
 }
 
 // move constructor
 Matrix::Matrix(Matrix && other)
-    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), tsize(other.tsize), m_buffer(other.m_nrow * other.m_ncol, 0)
+    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_buffer(other.m_nrow * other.m_ncol, 0)
 {
     other.m_buffer.swap(m_buffer);
 }
@@ -143,11 +145,11 @@ void Block::save(Matrix &mat, size_t it, size_t jt)
 
         for (size_t j=0; j<NDIM; ++j)
         {
-            size_t x1 = (base_t + j) / mat.nrow();
-            size_t y1 = (base_t + j) % mat.nrow();
+            size_t x1 = (base_t + j) / mat.ncol();
+            size_t y1 = (base_t + j) % mat.ncol();
             size_t x2 = (base_s + j) / NDIM;
             size_t y2 = (base_s + j) % NDIM;
-            mat(x1, y1) = (*this)(x2, y2);
+            mat(x1, y1) += (*this)(x2, y2);
         }
     }
 }
@@ -200,8 +202,8 @@ void Tiler::load(
         {
             size_t x1 = (base_t + j) / NDIM;
             size_t y1 = (base_t + j) % NDIM;
-            size_t x2 = (base_s + j) / mat1.nrow();
-            size_t y2 = (base_s + j) % mat1.nrow();
+            size_t x2 = (base_s + j) / mat1.ncol();
+            size_t y2 = (base_s + j) % mat1.ncol();
             m_mat1(x1, y1) = mat1(x2, y2);
         }
     }
@@ -217,8 +219,8 @@ void Tiler::load(
         {
             size_t x1 = (base_t + j) / NDIM;
             size_t y1 = (base_t + j) % NDIM;
-            size_t x2 = (base_s + j) / mat2.nrow();
-            size_t y2 = (base_s + j) % mat2.nrow();
+            size_t x2 = (base_s + j) / mat2.ncol();
+            size_t y2 = (base_s + j) % mat2.ncol();
             m_ret(x1, y1) = mat2(x2, y2);
         }
     }
@@ -313,30 +315,34 @@ Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2)
     return ret;
 };
 
-Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, size_t tsize)
+Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int lsize)
 {
 
-    validate_multiplication(mat1, mat2);
+    validate_multiplication(m1, m2);
 
     // New matrix to be returned
-    Matrix ret(mat1.m_nrow, mat2.m_ncol, tsize);
+    Matrix ret(m1.m_nrow, m2.m_ncol);
+    Matrix mat1(m1);
+    Matrix mat2(m2);
+    mat1.tsize = lsize;
+    mat2.tsize = lsize;
 
     const size_t nrow1 = mat1.nrow();
     const size_t ncol1 = mat1.ncol();
     //const size_t nrow2 = mat2.nrow();
     const size_t ncol2 = mat2.ncol();
 
-    std::cout << tsize << " " << "nothing" << std::endl;
-    std::cout << nrow1 << " " << ncol2 << std::endl;
-    std::cout << mat1.m_nrow << " " << mat2.m_ncol << std::endl;
+    std::cout << nrow1 << " " << m1.m_nrow << std::endl;
+    std::cout << ncol1 << " " << m1.m_ncol << std::endl;
+    std::cout << ncol2 << " " << m2.m_ncol << std::endl;
 
-    const size_t ntrow1 = nrow1 / tsize;
-    const size_t ntcol1 = ncol1 / tsize;
-    //const size_t ntrow2 = nrow2 / tsize;
-    const size_t ntcol2 = ncol2 / tsize;
+    const size_t ntrow1 = nrow1 / lsize;
+    const size_t ntcol1 = ncol1 / lsize;
+    //const size_t ntrow2 = nrow2 / lsize;
+    const size_t ntcol2 = ncol2 / lsize;
 
-    Block value(tsize);
-    Tiler tiler(tsize);
+    Block value(lsize);
+    Tiler tiler(lsize);
 
     for (size_t it=0; it<ntrow1; ++it)
     {
@@ -364,20 +370,20 @@ PYBIND11_MODULE(_matrix, m) {
         .def(py::init<size_t, size_t>())
         .def(py::init<Matrix const &>())
         .def(py::init<std::vector<std::vector<double>>&>())
-        .def_property("nrow", &Matrix::row, nullptr)
-        .def_property("ncol", &Matrix::col, nullptr)
+        .def_property("nrow", &Matrix::real_row, nullptr)
+        .def_property("ncol", &Matrix::real_col, nullptr)
         .def_buffer([] (Matrix &m) -> py::buffer_info {
             return py::buffer_info(
                 m.data(),
                 sizeof(double),
                 py::format_descriptor<double>::format(),
                 2,
-                { m.row(), m.col() },
-                { sizeof(double) * m.col(), sizeof(double)}
+                { m.real_row(), m.real_col() },
+                { sizeof(double) * m.real_col(), sizeof(double)}
             );
         })
         .def("__eq__", &Matrix::operator==)
-        .def("__setitem__", [](Matrix &mat1, std::pair<size_t, size_t> i, float v) {
+        .def("__setitem__", [](Matrix &mat1, std::pair<size_t, size_t> i, double v) {
             mat1(i.first, i.second) = v;
         })
         .def("__getitem__", [](Matrix &mat1, std::pair<size_t, size_t> i) {
