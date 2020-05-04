@@ -1,0 +1,6 @@
+Performance Measurement
+Input Matrix size:
+Matrix 1: 1916 x 1659
+Matrix 2: 1659 x 1408
+Average Time for multiply_naive: 11.840596596399942
+Average Time for multiply_mkl: 0.028339465459187824
