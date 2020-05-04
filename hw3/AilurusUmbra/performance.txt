@@ -1,0 +1,4 @@
+in_test
+Start multiply_naive (repeat=5), take avg = 4.617428636550903 seconds
+Start multiply_mkl (repeat=5), take avg = 0.05429296493530274 seconds
+MKL speed-up over naive: 85.0465 x
