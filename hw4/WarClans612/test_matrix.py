@@ -5,7 +5,7 @@ import pytest
 
 from _matrix import Matrix, multiply_naive, multiply_mkl, multiply_tile
 
-def test_multiply_naive():
+def tes_multiply_naive():
     for i in range(3):
         m = np.random.randint(200, 400)
         n = np.random.randint(200, 400)
@@ -20,7 +20,7 @@ def test_multiply_naive():
         assert naive_ans.ncol == n
         assert np.array(naive_ans) == pytest.approx(np.matmul(np_mat1, np_mat2))
 
-def test_multiply_mkl():
+def tes_multiply_mkl():
     for i in range(3):
         m = np.random.randint(200, 400)
         n = np.random.randint(200, 400)
@@ -53,9 +53,9 @@ def test_multiply_tile():
             assert np.array(tile_ans) == pytest.approx(np.matmul(np_mat1, np_mat2))
 
 def test_performance():
-    m = np.random.randint(500, 600)
-    n = np.random.randint(500, 600)
-    k = np.random.randint(500, 600)
+    m = np.random.randint(1000, 2000)
+    n = np.random.randint(1000, 2000)
+    k = np.random.randint(1000, 2000)
     np_mat1 = np.random.random((m, k))
     np_mat2 = np.random.random((k, n))
     mat1 = Matrix(np_mat1)
