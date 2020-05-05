@@ -26,8 +26,9 @@ public:
     friend Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2);
     friend Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, int lsize);
 
-    double   operator() (size_t row, size_t col) const { return m_buffer.at( row*m_ncol + col ); }
-    double & operator() (size_t row, size_t col)       { return m_buffer.at( row*m_ncol + col ); }
+    size_t index(size_t row, size_t col) const { return row*m_ncol + col; }
+    double   operator() (size_t row, size_t col) const { return m_buffer.at( index(row, col) ); }
+    double & operator() (size_t row, size_t col)       { return m_buffer.at( index(row, col) ); }
     double   operator() (size_t idx) const { return m_buffer.at( idx ); }
     double & operator() (size_t idx)       { return m_buffer.at( idx ); }
     void unpad(int x_pad, int y_pad);
@@ -87,7 +88,7 @@ Matrix::Matrix(std::vector<std::vector<double>> const & other)
         m_buffer.insert(m_buffer.end(), v.begin(), v.end()); 
 }
 
-void Matrix::unpad(int x_pad, int y_pad)
+inline void Matrix::unpad(int x_pad, int y_pad)
 {
     size_t x = m_nrow-x_pad;
     size_t y = m_ncol-y_pad;
@@ -150,7 +151,7 @@ Block& Block::operator+= (Block const &other)
     return *this;
 }
 
-void Block::save(Matrix &mat, size_t it, size_t jt)
+inline void Block::save(Matrix &mat, size_t it, size_t jt)
 {
     const size_t ncol = mat.ncol();
 
@@ -196,7 +197,7 @@ Tiler::Tiler(size_t N)
 
 }
 
-void Tiler::load(
+inline void Tiler::load(
     Matrix const & mat1, size_t it1, size_t jt1,
     Matrix const & mat2, size_t it2, size_t jt2
 )
@@ -219,7 +220,7 @@ void Tiler::load(
     }
 }
 
-void Tiler::multiply(Block &m_ret)
+inline void Tiler::multiply(Block &m_ret)
 {
     for (size_t i=0; i<NDIM; ++i)
     {
@@ -284,8 +285,9 @@ Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2)
     return ret;
 };
 
-Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int lsize)
+Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int tsize)
 {
+    int lsize = tsize;
     validate_multiplication(m1, m2);
 
     const size_t nr1 = m1.nrow();
@@ -293,10 +295,10 @@ Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int lsize)
     const size_t nr2 = m2.nrow();
     const size_t nc2 = m2.ncol();
 
-    int nx1 = ((nr1/lsize) + (nr1%lsize != 0)) * lsize - nr1;
-    int ny1 = ((nc1/lsize) + (nc1%lsize != 0)) * lsize - nc1;
-    int nx2 = ((nr2/lsize) + (nr2%lsize != 0)) * lsize - nr2;
-    int ny2 = ((nc2/lsize) + (nc2%lsize != 0)) * lsize - nc2;
+    const int nx1 = ((nr1/lsize) + (nr1%lsize != 0)) * lsize - nr1;
+    const int ny1 = ((nc1/lsize) + (nc1%lsize != 0)) * lsize - nc1;
+    const int nx2 = ((nr2/lsize) + (nr2%lsize != 0)) * lsize - nr2;
+    const int ny2 = ((nc2/lsize) + (nc2%lsize != 0)) * lsize - nc2;
     Matrix mat1(m1, nx1, ny1);
     Matrix mat2(m2, nx2, ny2);
 
