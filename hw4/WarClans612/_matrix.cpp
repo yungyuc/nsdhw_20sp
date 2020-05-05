@@ -10,7 +10,6 @@
 
 namespace py = pybind11;
 
-
 class Matrix {
 
 public:
@@ -154,17 +153,15 @@ Block& Block::operator+= (Block const &other)
 void Block::save(Matrix &mat, size_t it, size_t jt)
 {
     const size_t ncol = mat.ncol();
-    const size_t a = it*NDIM;
-    const size_t b = jt*NDIM;
 
     for (size_t i=0; i<NDIM; ++i)
     {
         const size_t base_s = i*NDIM;
-        const size_t base_t = (a + i)*ncol + b;
+        const size_t base_t = (it + i)*ncol + jt;
 
         for (size_t j=0; j<NDIM; ++j)
         {
-            mat(base_t + j) += (*this)(base_s + j);
+            mat(base_t + j) += m_buffer.at(base_s + j);
         }
     }
 }
@@ -182,21 +179,24 @@ public:
         Matrix const & mat2, size_t it2, size_t jt2
     );
 
-    void multiply();
-
-    Block ret() { return m_ret; }
+    void multiply(Block &m_ret);
+    void update_pad(int x_pad, int y_pad);
 
 private:
 
+    int x_pad = 0;
+    int y_pad = 0;
+    size_t max_i;
+    size_t max_k;
     size_t NDIM;
     Block m_mat1; // row-major
     Block m_mat2; // column-major
-    Block m_ret; // row-major
+    //Block m_ret; // row-major
 };
 
 // default contructor
 Tiler::Tiler(size_t N)
-    : NDIM(N), m_mat1(N), m_mat2(N), m_ret(N)
+    : max_i(N), max_k(N), NDIM(N), m_mat1(N), m_mat2(N)
 {
 
 }
@@ -208,18 +208,13 @@ void Tiler::load(
 {
     //const size_t nrow1 = mat1.nrow();
     const size_t ncol1 = mat1.ncol();
-    const size_t a1 = it1*NDIM;
-    const size_t b1 = jt1*NDIM;
     //const size_t nrow2 = mat2.nrow();
     const size_t ncol2 = mat2.ncol();
-    const size_t a2 = it2*NDIM;
-    const size_t b2 = jt2*NDIM;
 
-    for (size_t i=0; i<NDIM; ++i)
+    for (size_t i=0, base_t1=0; i<NDIM; ++i, base_t1+=NDIM)
     {
-        const size_t base_s1 = (a1 + i)*ncol1 + b1;
-        const size_t base_s2 = (a2 + i)*ncol2 + b2;
-        const size_t base_t1 = i*NDIM;
+        const size_t base_s1 = (it1 + i)*ncol1 + jt1;
+        const size_t base_s2 = (it2 + i)*ncol2 + jt2;
 
         for (size_t j=0, base_t2=0; j<NDIM; ++j, base_t2+=NDIM)
         {
@@ -229,20 +224,28 @@ void Tiler::load(
     }
 }
 
-void Tiler::multiply()
+void Tiler::multiply(Block &m_ret)
 {
-    for (size_t i=0; i<NDIM; ++i)
+    for (size_t i=0; i<max_i; ++i)
     {
-        for (size_t k=0; k<NDIM; ++k)
+        for (size_t k=0; k<max_k; ++k)
         {
             double v = 0;
             for (size_t j=0; j<NDIM; ++j)
             {
                 v += m_mat1(i, j) * m_mat2(k, j);
             }
-            m_ret(i, k) = v;
+            m_ret(i, k) += v;
         }
     }
+}
+
+void Tiler::update_pad(int x_pad, int y_pad)
+{
+    this->x_pad = x_pad;
+    this->y_pad = y_pad;
+    this->max_i = NDIM - x_pad;
+    this->max_k = NDIM - y_pad;
 }
 
 void validate_multiplication(const Matrix &mat1, const Matrix &mat2)
@@ -260,18 +263,18 @@ Matrix multiply_naive(const Matrix &mat1, const Matrix &mat2)
     validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
-    Matrix ret(mat1.m_nrow, mat2.m_ncol);
+    Matrix ret(mat1.nrow(), mat2.ncol());
 
-    for (size_t i=0; i<ret.m_nrow; ++i)
+    for (size_t i=0; i<ret.nrow(); ++i)
     {
-        for (size_t k=0; k<ret.m_ncol; ++k)
+        for (size_t k=0; k<ret.ncol(); ++k)
         {
             double v = 0;
-            for (size_t j=0; j<mat1.m_ncol; ++j)
+            for (size_t j=0; j<mat1.ncol(); ++j)
             {
                 v += mat1(i,j) * mat2(j,k);
             }
-            ret(i,k) = v;
+            ret(i, k) = v;
         }
     }
     return ret;
@@ -298,10 +301,15 @@ Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int lsize)
 {
     validate_multiplication(m1, m2);
 
-    int nx1 = ((m1.nrow()/lsize) + (m1.nrow()%lsize != 0)) * lsize - m1.nrow();
-    int ny1 = ((m1.ncol()/lsize) + (m1.ncol()%lsize != 0)) * lsize - m1.ncol();
-    int nx2 = ((m2.nrow()/lsize) + (m2.nrow()%lsize != 0)) * lsize - m2.nrow();
-    int ny2 = ((m2.ncol()/lsize) + (m2.ncol()%lsize != 0)) * lsize - m2.ncol();
+    const size_t nr1 = m1.nrow();
+    const size_t nc1 = m1.ncol();
+    const size_t nr2 = m2.nrow();
+    const size_t nc2 = m2.ncol();
+
+    int nx1 = ((nr1/lsize) + (nr1%lsize != 0)) * lsize - nr1;
+    int ny1 = ((nc1/lsize) + (nc1%lsize != 0)) * lsize - nc1;
+    int nx2 = ((nr2/lsize) + (nr2%lsize != 0)) * lsize - nr2;
+    int ny2 = ((nc2/lsize) + (nc2%lsize != 0)) * lsize - nc2;
     Matrix mat1(m1, nx1, ny1);
     Matrix mat2(m2, nx2, ny2);
 
@@ -313,29 +321,48 @@ Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int lsize)
     // New matrix to be returned
     Matrix ret(nrow1, ncol2);
 
-    const size_t ntrow1 = nrow1 / lsize;
-    const size_t ntcol1 = ncol1 / lsize;
-    //const size_t ntrow2 = nrow2 / lsize;
-    const size_t ntcol2 = ncol2 / lsize;
-
     Block value(lsize);
     Tiler tiler(lsize);
 
-    for (size_t it=0; it<ntrow1; ++it)
+    const size_t max_it = nrow1-lsize;
+    for (size_t it=0; it<max_it; it+=lsize)
     {
-        for (size_t kt=0; kt<ntcol2; ++kt)
+        for (size_t kt=0; kt<ncol2; kt+=lsize)
         {
-
             value = 0;
-            for (size_t jt=0; jt<ntcol1; ++jt)
+            for (size_t jt=0; jt<ncol1; jt+=lsize)
             {
                 tiler.load(mat1, it, jt, mat2, jt, kt);
-                tiler.multiply();
-                value += tiler.ret();
+                tiler.multiply(value);
             }
             value.save(ret, it, kt);
         }
     }
+
+    // For the edge case
+    const size_t it=nrow1-lsize;
+    tiler.update_pad(nx1, 0);
+    const size_t max_kt = ncol2-lsize;
+    for (size_t kt=0; kt<max_kt; kt+=lsize)
+    {
+        value = 0;
+        for (size_t jt=0; jt<ncol1; jt+=lsize)
+        {
+            tiler.load(mat1, it, jt, mat2, jt, kt);
+            tiler.multiply(value);
+        }
+        value.save(ret, it, kt);
+    }
+
+    const size_t kt=ncol2-lsize;
+    tiler.update_pad(nx1, ny2);
+    value = 0;
+    for (size_t jt=0; jt<ncol1; jt+=lsize)
+    {
+        tiler.load(mat1, it, jt, mat2, jt, kt);
+        tiler.multiply(value);
+    }
+    value.save(ret, it, kt);
 
     ret.unpad(nx1, ny2);
     return ret;
