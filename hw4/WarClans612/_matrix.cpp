@@ -180,14 +180,9 @@ public:
     );
 
     void multiply(Block &m_ret);
-    void update_pad(int x_pad, int y_pad);
 
 private:
 
-    int x_pad = 0;
-    int y_pad = 0;
-    size_t max_i;
-    size_t max_k;
     size_t NDIM;
     Block m_mat1; // row-major
     Block m_mat2; // column-major
@@ -196,7 +191,7 @@ private:
 
 // default contructor
 Tiler::Tiler(size_t N)
-    : max_i(N), max_k(N), NDIM(N), m_mat1(N), m_mat2(N)
+    : NDIM(N), m_mat1(N), m_mat2(N)
 {
 
 }
@@ -226,9 +221,9 @@ void Tiler::load(
 
 void Tiler::multiply(Block &m_ret)
 {
-    for (size_t i=0; i<max_i; ++i)
+    for (size_t i=0; i<NDIM; ++i)
     {
-        for (size_t k=0; k<max_k; ++k)
+        for (size_t k=0; k<NDIM; ++k)
         {
             double v = 0;
             for (size_t j=0; j<NDIM; ++j)
@@ -238,14 +233,6 @@ void Tiler::multiply(Block &m_ret)
             m_ret(i, k) += v;
         }
     }
-}
-
-void Tiler::update_pad(int x_pad, int y_pad)
-{
-    this->x_pad = x_pad;
-    this->y_pad = y_pad;
-    this->max_i = NDIM - x_pad;
-    this->max_k = NDIM - y_pad;
 }
 
 void validate_multiplication(const Matrix &mat1, const Matrix &mat2)
@@ -324,8 +311,7 @@ Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int lsize)
     Block value(lsize);
     Tiler tiler(lsize);
 
-    const size_t max_it = nrow1-lsize;
-    for (size_t it=0; it<max_it; it+=lsize)
+    for (size_t it=0; it<nrow1; it+=lsize)
     {
         for (size_t kt=0; kt<ncol2; kt+=lsize)
         {
@@ -338,31 +324,6 @@ Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int lsize)
             value.save(ret, it, kt);
         }
     }
-
-    // For the edge case
-    const size_t it=nrow1-lsize;
-    tiler.update_pad(nx1, 0);
-    const size_t max_kt = ncol2-lsize;
-    for (size_t kt=0; kt<max_kt; kt+=lsize)
-    {
-        value = 0;
-        for (size_t jt=0; jt<ncol1; jt+=lsize)
-        {
-            tiler.load(mat1, it, jt, mat2, jt, kt);
-            tiler.multiply(value);
-        }
-        value.save(ret, it, kt);
-    }
-
-    const size_t kt=ncol2-lsize;
-    tiler.update_pad(nx1, ny2);
-    value = 0;
-    for (size_t jt=0; jt<ncol1; jt+=lsize)
-    {
-        tiler.load(mat1, it, jt, mat2, jt, kt);
-        tiler.multiply(value);
-    }
-    value.save(ret, it, kt);
 
     ret.unpad(nx1, ny2);
     return ret;
