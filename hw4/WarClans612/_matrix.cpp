@@ -146,8 +146,7 @@ Block& Block::operator= (double v)
 
 Block& Block::operator+= (Block const &other)
 {
-    const size_t max_i = NDIM*NDIM;
-    for (size_t i=0; i<max_i; ++i) { m_buffer.at(i) += other.m_buffer.at(i); }
+    for (size_t i=0; i<NDIM*NDIM; ++i) { m_buffer.at(i) += other.m_buffer.at(i); }
     return *this;
 }
 
@@ -285,40 +284,30 @@ Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2)
     return ret;
 };
 
-Matrix multiply_tile(const Matrix &m1, const Matrix &m2, int tsize)
+Matrix multiply_tile(const Matrix &m1, const Matrix &m2, const int tsize)
 {
     int lsize = tsize;
     validate_multiplication(m1, m2);
 
-    const size_t nr1 = m1.nrow();
-    const size_t nc1 = m1.ncol();
-    const size_t nr2 = m2.nrow();
-    const size_t nc2 = m2.ncol();
-
-    const int nx1 = ((nr1/lsize) + (nr1%lsize != 0)) * lsize - nr1;
-    const int ny1 = ((nc1/lsize) + (nc1%lsize != 0)) * lsize - nc1;
-    const int nx2 = ((nr2/lsize) + (nr2%lsize != 0)) * lsize - nr2;
-    const int ny2 = ((nc2/lsize) + (nc2%lsize != 0)) * lsize - nc2;
+    const int nx1 = ((m1.m_nrow/lsize) + (m1.m_nrow%lsize != 0)) * lsize - m1.m_nrow;
+    const int ny1 = ((m1.m_ncol/lsize) + (m1.m_ncol%lsize != 0)) * lsize - m1.m_ncol;
+    const int nx2 = ((m2.m_nrow/lsize) + (m2.m_nrow%lsize != 0)) * lsize - m2.m_nrow;
+    const int ny2 = ((m2.m_ncol/lsize) + (m2.m_ncol%lsize != 0)) * lsize - m2.m_ncol;
     Matrix mat1(m1, nx1, ny1);
     Matrix mat2(m2, nx2, ny2);
 
-    const size_t nrow1 = mat1.nrow();
-    const size_t ncol1 = mat1.ncol();
-    //const size_t nrow2 = mat2.nrow();
-    const size_t ncol2 = mat2.ncol();
-
     // New matrix to be returned
-    Matrix ret(nrow1, ncol2);
+    Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
     Block value(lsize);
     Tiler tiler(lsize);
 
-    for (size_t it=0; it<nrow1; it+=lsize)
+    for (size_t it=0; it<mat1.m_nrow; it+=lsize)
     {
-        for (size_t kt=0; kt<ncol2; kt+=lsize)
+        for (size_t kt=0; kt<mat2.m_ncol; kt+=lsize)
         {
             value = 0;
-            for (size_t jt=0; jt<ncol1; jt+=lsize)
+            for (size_t jt=0; jt<mat1.m_ncol; jt+=lsize)
             {
                 tiler.load(mat1, it, jt, mat2, jt, kt);
                 tiler.multiply(value);
