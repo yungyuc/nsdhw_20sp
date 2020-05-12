@@ -11,8 +11,6 @@ namespace py = pybind11;
 
 class Matrix{
     public:
-
-    
     Matrix(size_t nrow, size_t ncol)
         :m_nrow(nrow), m_ncol(ncol)
     {
@@ -183,8 +181,10 @@ Matrix multiply_naive(const Matrix& a, const Matrix& b)
     return ans;
 }
 
+
 Matrix multiply_mkl(const Matrix& a, const Matrix& b)
 {
+
     size_t m = a.nrow();
     size_t k = a.ncol();
     size_t n = b.ncol();
@@ -199,9 +199,79 @@ Matrix multiply_mkl(const Matrix& a, const Matrix& b)
     return c;
 }
  
+
+
+/* ========================
+    Tiled Multiplication
+   ========================*/
+
+class Block {
+public:
+
+    Block():nrow(0), ncol(0), m_data(nullptr), is_external_data(false) {}
+    Block(double* data , size_t r, size_t c):
+    nrow(r), ncol(c), m_data(data), is_external_data(true)
+    {}
+    Block(size_t r, size_t c):
+    nrow(r), ncol(c), m_data(new double[r*c]), is_external_data(false)
+    {}
+
+    size_t index(size_t r, size_t c) const { return r*nrow+c; }
+    double   operator() (size_t r, size_t c) const { return m_data[index(r, c)]; }
+    double & operator() (size_t r, size_t c)       { return m_data[index(r, c)]; }
+
+    ~Block()
+    {
+        if(is_external_data) return;
+        delete[] m_data;
+    }
+
+    size_t nrow;
+    size_t ncol;
+    double* m_data;
+    bool is_external_data;
+};
+
+Block multiply_block(const Block& a, const Block& b)
+{
+    auto ans = Block(a.nrow, b.ncol);
+    for(size_t r = 0; r < ans.nrow; r++){
+        for(size_t c = 0; c < ans.ncol; c++){
+            double s = 0;
+            for(size_t i = 0; i < a.ncol; i++){
+                s += a(r, i) * b(i, c);
+            }
+            ans(r, c) = s;
+        }
+    }
+    return ans;
+}
+
+Matrix multiply_tile(const Matrix& a, const Matrix& b)
+{
+    const size_t tile_size = 2 << 6;
+    const size_t m = a.nrow();
+    const size_t k = a.ncol();
+    const size_t n = b.ncol();
+    
+    auto ans = Matrix(m, n);
+
+    for(size_t r = 0; r < m; r++){
+        for(size_t c = 0; c < n; c++){
+            double s = 0;
+            for(size_t i = 0; i < k; i++){
+                s += a(r, i) * b(i, c);
+            }
+            ans(r, c) = s;
+        }
+    }
+    return ans;
+}
+
 PYBIND11_MODULE(_matrix, m){
     m.def("multiply_naive", &multiply_naive);
     m.def("multiply_mkl", &multiply_mkl);
+    m.def("multiply_tile", &multiply_tile);
 
     py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
         .def(py::init([](size_t r, size_t c) {return new Matrix(r, c);}))
