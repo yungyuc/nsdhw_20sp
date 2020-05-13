@@ -45,6 +45,7 @@ matrix: _matrix.cpp
 test:
 	${CXX} ${CXXFLAGS} _matrix.cpp -o _matrix`python3-config --extension-suffix`
 	pytest
+	cat performance.txt
 
 .PHONY: clean
 clean:
