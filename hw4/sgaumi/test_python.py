@@ -79,7 +79,7 @@ class test_python(unittest.TestCase):
 		k=rd.randint(1,100)
 		m1=Matrix(rd.random((r,k)))
 		m2=Matrix(rd.random((k,c)))
-		mulc=multiply_tile(m1,m2)
+		mulc=multiply_tile(m1,m2,64)
 		mulp=multiply_naive_python(m1,m2)
 
 		self.assertEqual(mulc.nrow,r)
@@ -123,7 +123,7 @@ class test_python(unittest.TestCase):
 		i+=1
 
 		timer_start=time.time()
-		mulc_mkl=multiply_tile(m1,m2)
+		mulc_mkl=multiply_tile(m1,m2,64)
 		timer_stop=time.time()
 		timer.append(timer_stop-timer_start)
 		i_mulctile=i

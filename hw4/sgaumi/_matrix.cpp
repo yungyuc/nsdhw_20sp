@@ -314,10 +314,11 @@ Matrix suppr0(Matrix const& m,size_t r,size_t c){
 
 
 //Tiled matrix matrix multiplication.
-Matrix multiply_tile(Matrix const & mat1_0, Matrix const & mat2_0)
+Matrix multiply_tile(Matrix const & mat1_0, Matrix const & mat2_0, size_t size)
 {
 
-    constexpr const size_t tsize = 64 / sizeof(double);
+    //constexpr const size_t tsize = 64 / sizeof(double);
+	constexpr const size_t tsize = size / sizeof(double);
 
 	size_t r1 = tsize - (mat1_0.nrow()%tsize);
 	size_t c1= tsize - (mat1_0.ncol()%tsize);
