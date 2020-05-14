@@ -32,14 +32,23 @@ CXX = g++
 PYBINDFLAGS := \
 	-fPIC `python3 -m pybind11 --includes`
 
-.PHONY: _matrix 
-_matrix: _matrix.cpp
-	${CXX} $^ ${CXXFLAGS} $(PYBINDFLAGS) -o $@`python3-config --extension-suffix`
+.PHONY: _matlink
+_matlink: _matrix _main.o _matrix.o _tiler.o _block.o
+	$(CXX) -shared -o _matrix`python3-config --extension-suffix` _main.o _matrix.o _tiler.o _block.o
+
+_matrix: _main.cpp
+	${CXX} $< ${CXXFLAGS} $(PYBINDFLAGS) -o $@`python3-config --extension-suffix`
+
+_main.o: _main.cpp
+	$(CXX) -c $< $(PYBINDFLAGS) -o $@ -fPIC
+
+%.o: %.cpp %.hpp Makefile
+	$(CXX) -c $< -o $@ -fPIC
 
 .PHONY: clean
 clean: 
 	rm -rf _matrix *.so *.o performance.txt __pycache__/
 
 .PHONY: test
-test: _matrix
+test: _matlink
 	py.test -v -l

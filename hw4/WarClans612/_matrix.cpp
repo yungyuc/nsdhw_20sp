@@ -3,55 +3,9 @@
 #include <iostream>
 #include "mkl.h"
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/operators.h>
-#include <pybind11/numpy.h>
-
-namespace py = pybind11;
-
-class Matrix {
-
-public:
-
-    Matrix(size_t nrow, size_t ncol);
-    Matrix(Matrix const & other, int x_pad, int y_pad);
-    Matrix(Matrix && other);
-    Matrix(std::vector<std::vector<double>> const & other);
-
-    ~Matrix() = default; // default destructor
-
-    friend void validate_multiplication(const Matrix &mat1, const Matrix &mat2);
-    friend Matrix multiply_naive(const Matrix &mat1, const Matrix &mat2);
-    friend Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2);
-    friend Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, int lsize);
-
-    size_t index(size_t row, size_t col) const { return row*m_ncol + col; }
-    double   operator() (size_t row, size_t col) const { return m_buffer.at( index(row, col) ); }
-    double & operator() (size_t row, size_t col)       { return m_buffer.at( index(row, col) ); }
-    double   operator() (size_t idx) const { return m_buffer.at( idx ); }
-    double & operator() (size_t idx)       { return m_buffer.at( idx ); }
-    void unpad(int x_pad, int y_pad);
-
-    bool operator== (Matrix const &other)
-    {
-        if (this == &other) return true;
-        if (m_nrow != other.m_nrow || m_ncol != other.m_ncol) return false;
-        if (m_buffer == other.m_buffer) return true;
-        else return false;
-    }
-
-    double *data() { return m_buffer.data(); }
-    size_t nrow() const { return m_nrow; }
-    size_t ncol() const { return m_ncol; }
-
-private:
-
-    size_t m_nrow;
-    size_t m_ncol;
-    std::vector<double> m_buffer;
-
-};
+#include "_matrix.hpp"
+#include "_block.hpp"
+#include "_tiler.hpp"
 
 // default contructor
 Matrix::Matrix(size_t nrow, size_t ncol)
@@ -88,7 +42,7 @@ Matrix::Matrix(std::vector<std::vector<double>> const & other)
         m_buffer.insert(m_buffer.end(), v.begin(), v.end()); 
 }
 
-inline void Matrix::unpad(int x_pad, int y_pad)
+void Matrix::unpad(int x_pad, int y_pad)
 {
     size_t x = m_nrow-x_pad;
     size_t y = m_ncol-y_pad;
@@ -104,135 +58,6 @@ inline void Matrix::unpad(int x_pad, int y_pad)
     m_buffer.swap(temp);
     m_nrow = x;
     m_ncol = y;
-}
-
-
-class Block {
-
-public:
-
-    Block(size_t N);
-
-    ~Block() = default; // default destructor
-
-    double   operator() (size_t row, size_t col) const { return m_buffer.at( row*NDIM + col ); }
-    double & operator() (size_t row, size_t col)       { return m_buffer.at( row*NDIM + col ); }
-    double   operator() (size_t idx) const { return m_buffer.at( idx ); }
-    double & operator() (size_t idx)       { return m_buffer.at( idx ); }
-
-    Block &operator= (double v);
-    Block &operator+= (Block const &other);
-
-    void save(Matrix &mat, size_t it, size_t jt);
-
-private:
-
-    size_t NDIM;
-    std::vector<double> m_buffer;
-};
-
-// default contructor
-Block::Block(size_t N)
-    : NDIM(N), m_buffer(N * N, 0)
-{
-    std::fill(m_buffer.begin(), m_buffer.end(), 0);
-}
-
-Block& Block::operator= (double v)
-{
-    std::fill(m_buffer.begin(), m_buffer.end(), v);
-    return *this;
-}
-
-Block& Block::operator+= (Block const &other)
-{
-    for (size_t i=0; i<NDIM*NDIM; ++i) { m_buffer.at(i) += other.m_buffer.at(i); }
-    return *this;
-}
-
-inline void Block::save(Matrix &mat, size_t it, size_t jt)
-{
-    const size_t ncol = mat.ncol();
-
-    for (size_t i=0; i<NDIM; ++i)
-    {
-        const size_t base_s = i*NDIM;
-        const size_t base_t = (it + i)*ncol + jt;
-
-        for (size_t j=0; j<NDIM; ++j)
-        {
-            mat(base_t + j) += m_buffer.at(base_s + j);
-        }
-    }
-}
-
-class Tiler {
-
-public:
-
-    Tiler(size_t N);
-
-    ~Tiler() = default; // default destructor
-
-    void load(
-        Matrix const & mat1, size_t it1, size_t jt1, 
-        Matrix const & mat2, size_t it2, size_t jt2
-    );
-
-    void multiply(Block &m_ret);
-
-private:
-
-    size_t NDIM;
-    Block m_mat1; // row-major
-    Block m_mat2; // column-major
-    //Block m_ret; // row-major
-};
-
-// default contructor
-Tiler::Tiler(size_t N)
-    : NDIM(N), m_mat1(N), m_mat2(N)
-{
-
-}
-
-inline void Tiler::load(
-    Matrix const & mat1, size_t it1, size_t jt1,
-    Matrix const & mat2, size_t it2, size_t jt2
-)
-{
-    //const size_t nrow1 = mat1.nrow();
-    const size_t ncol1 = mat1.ncol();
-    //const size_t nrow2 = mat2.nrow();
-    const size_t ncol2 = mat2.ncol();
-
-    for (size_t i=0, base_t1=0; i<NDIM; ++i, base_t1+=NDIM)
-    {
-        const size_t base_s1 = (it1 + i)*ncol1 + jt1;
-        const size_t base_s2 = (it2 + i)*ncol2 + jt2;
-
-        for (size_t j=0, base_t2=0; j<NDIM; ++j, base_t2+=NDIM)
-        {
-            m_mat1(base_t1 + j) = mat1(base_s1 + j);
-            m_mat2(base_t2 + i) = mat2(base_s2 + j);
-        }
-    }
-}
-
-inline void Tiler::multiply(Block &m_ret)
-{
-    for (size_t i=0; i<NDIM; ++i)
-    {
-        for (size_t k=0; k<NDIM; ++k)
-        {
-            double v = 0;
-            for (size_t j=0; j<NDIM; ++j)
-            {
-                v += m_mat1(i, j) * m_mat2(k, j);
-            }
-            m_ret(i, k) += v;
-        }
-    }
 }
 
 void validate_multiplication(const Matrix &mat1, const Matrix &mat2)
@@ -318,33 +143,4 @@ Matrix multiply_tile(const Matrix &m1, const Matrix &m2, const int tsize)
 
     ret.unpad(nx1, ny2);
     return ret;
-}
-
-PYBIND11_MODULE(_matrix, m) {
-    m.def("multiply_naive", &multiply_naive);
-    m.def("multiply_mkl", &multiply_mkl);
-    m.def("multiply_tile", &multiply_tile);
-    py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
-        .def(py::init<size_t, size_t>())
-        //.def(py::init<Matrix const &>())
-        .def(py::init<std::vector<std::vector<double>>&>())
-        .def_property("nrow", &Matrix::nrow, nullptr)
-        .def_property("ncol", &Matrix::ncol, nullptr)
-        .def_buffer([] (Matrix &m) -> py::buffer_info {
-            return py::buffer_info(
-                m.data(),
-                sizeof(double),
-                py::format_descriptor<double>::format(),
-                2,
-                { m.nrow(), m.ncol() },
-                { sizeof(double) * m.ncol(), sizeof(double)}
-            );
-        })
-        .def("__eq__", &Matrix::operator==)
-        .def("__setitem__", [](Matrix &mat1, std::pair<size_t, size_t> i, double v) {
-            mat1(i.first, i.second) = v;
-        })
-        .def("__getitem__", [](Matrix &mat1, std::pair<size_t, size_t> i) {
-            return mat1(i.first, i.second);
-        });
 }
