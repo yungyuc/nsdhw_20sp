@@ -42,9 +42,6 @@ _matrix: _main.cpp
 _main.o: _main.cpp
 	$(CXX) -c $< $(PYBINDFLAGS) -o $@ -fPIC
 
-_matrix.o: _matrix.cpp _matrix.hpp Makefile
-	$(CXX) -c $< ${MKLLINKLINE} -o $@ -fPIC
-
 %.o: %.cpp %.hpp Makefile
 	$(CXX) -c $< -o $@ -fPIC
 
