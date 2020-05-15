@@ -1,5 +1,6 @@
 #include <iostream>
 #include <array>
+#include <vector>
 #include <sstream>
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -35,6 +36,26 @@ class Matrix{
             for (size_t j=0; j<m_ncol; ++j)
             {
                 (*this)(i,j) = other(i,j);
+            }
+        }
+    }
+
+    Matrix(Matrix const & other, size_t start_r, size_t start_c, size_t size_r, size_t size_c)
+      : m_nrow(size_r), m_ncol(size_c)
+    {
+        // std::cout << start_r << ", " << size_r << ", " << other.nrow() << "\n";
+        // std::cout << start_c << ", " << size_c << ", " << other.ncol() << "\n";
+        if(start_r + size_r > other.nrow() || start_c + size_c > other.ncol())
+        {
+            exit(EXIT_FAILURE);
+        }
+
+        reset_data(size_r, size_c);
+        size_t ret_count = 0;
+        for(size_t r = 0; r < size_r; ++r){
+            // size_t base_idx = index(start_r + r, start_c);
+            for(size_t c = 0; c < size_c; ++c){
+                m_data[ret_count++] = other(start_r + r, start_c + c);
             }
         }
     }
@@ -120,19 +141,83 @@ class Matrix{
         return true;
     }
 
+    Matrix operator+(Matrix const & other) const
+    {
+        auto ans = Matrix(other);
+        double* data = ans.data();
+        for(size_t i = 0; i < m_nrow*m_ncol; ++i)
+            data[i] += m_data[i];
+        return ans;
+    }
+
+    Matrix& operator+=(Matrix const & other)
+    {
+        double* data = other.data();
+        for(size_t i = 0; i < m_nrow*m_ncol; ++i)
+            m_data[i] += data[i];
+        return *this;
+    }
+
     /* 
         Methods
      */
 
-    void set_data(size_t r, size_t c, double val){
-        m_data[index(r, c)] = val;
+    double get_data(size_t idx) const { return m_data[idx]; }
+    double get_data(size_t r, size_t c) const { return m_data[index(r, c)]; }
+
+    void set_data(size_t idx, double val) { m_data[idx] = val; }
+    void set_data(size_t r, size_t c, double val) { m_data[index(r, c)] = val; }
+
+    void set_block(const Matrix& mat, size_t start_r, size_t start_c, size_t size_r, size_t size_c) {
+        if(start_r + size_r > m_nrow) exit(EXIT_FAILURE);
+        if(start_c + size_c > m_ncol) exit(EXIT_FAILURE);
+
+        size_t ret_count = 0;
+        for(size_t r = 0; r < size_r; ++r){
+            size_t base_idx = index(start_r + r, start_c);
+            for(size_t c = 0; c < size_c; ++c){
+                m_data[base_idx++] = mat.get_data(ret_count++);
+            }
+        }
     }
 
-    double get_data(size_t r, size_t c) const{
-        return m_data[index(r, c)];
+    std::vector<std::vector<Matrix>> split_block(size_t size_block) const {
+        std::vector<std::vector<Matrix>> ans;
+        
+        size_t b_row = m_nrow / size_block;
+        size_t b_col = m_ncol / size_block;
+        // if(b_row == 0 && b_col == 0)
+        //     return ans;
+        
+        for(size_t i = b_row + 1, r = 0; i > 0; --i, r += size_block){
+            
+            size_t size_r = size_block;
+            if(i == 1){
+                // check remaining row
+                if(m_nrow - r > 0){
+                    size_r = m_nrow - r;
+                }
+                else break;
+            }
+
+            // process column
+            std::vector<Matrix> vec;
+            int c;
+            int cond_c = m_ncol - size_block; // c + size_block < m_ncol
+            for(c = 0; c < cond_c; c += size_block){
+                vec.push_back(Matrix(*this, r, c, size_r, size_block));
+            }
+            // remaining col
+            if(m_ncol - c > 0){
+                vec.push_back(Matrix(*this, r, c, size_r, m_ncol - c));
+            }
+            ans.push_back(vec);
+        }
+
+        return ans;
     }
 
-    std::string reprString(){
+    std::string reprString() const{
         std::stringstream stm;
         size_t idx = 0;
         for(size_t i = 0; i < m_nrow; ++i){
@@ -153,7 +238,9 @@ class Matrix{
         if(m_data) delete[] m_data;
 
         const size_t size = nrow * ncol;
-        if(size > 0) m_data = new double[size];
+        if(size > 0){
+            m_data = new double[size]{0};
+        } 
         else m_data = nullptr;
 
         m_nrow = nrow;
@@ -165,6 +252,11 @@ class Matrix{
     size_t m_ncol = 0;
     double* m_data = nullptr;
 };
+
+
+/* ========================
+       Multiplication
+   ========================*/
 
 Matrix multiply_naive(const Matrix& a, const Matrix& b)
 {
@@ -180,7 +272,6 @@ Matrix multiply_naive(const Matrix& a, const Matrix& b)
     }
     return ans;
 }
-
 
 Matrix multiply_mkl(const Matrix& a, const Matrix& b)
 {
@@ -198,75 +289,56 @@ Matrix multiply_mkl(const Matrix& a, const Matrix& b)
 
     return c;
 }
- 
 
 
-/* ========================
-    Tiled Multiplication
-   ========================*/
-
-class Block {
-public:
-
-    Block():nrow(0), ncol(0), m_data(nullptr), is_external_data(false) {}
-    Block(double* data , size_t r, size_t c):
-    nrow(r), ncol(c), m_data(data), is_external_data(true)
-    {}
-    Block(size_t r, size_t c):
-    nrow(r), ncol(c), m_data(new double[r*c]), is_external_data(false)
-    {}
-
-    size_t index(size_t r, size_t c) const { return r*nrow+c; }
-    double   operator() (size_t r, size_t c) const { return m_data[index(r, c)]; }
-    double & operator() (size_t r, size_t c)       { return m_data[index(r, c)]; }
-
-    ~Block()
-    {
-        if(is_external_data) return;
-        delete[] m_data;
-    }
-
-    size_t nrow;
-    size_t ncol;
-    double* m_data;
-    bool is_external_data;
-};
-
-Block multiply_block(const Block& a, const Block& b)
-{
-    auto ans = Block(a.nrow, b.ncol);
-    for(size_t r = 0; r < ans.nrow; r++){
-        for(size_t c = 0; c < ans.ncol; c++){
-            double s = 0;
-            for(size_t i = 0; i < a.ncol; i++){
-                s += a(r, i) * b(i, c);
-            }
-            ans(r, c) = s;
-        }
-    }
-    return ans;
-}
 
 Matrix multiply_tile(const Matrix& a, const Matrix& b)
 {
-    const size_t tile_size = 2 << 6;
-    const size_t m = a.nrow();
-    const size_t k = a.ncol();
-    const size_t n = b.ncol();
+    const size_t tile_size = 2 << 7;
     
-    auto ans = Matrix(m, n);
 
-    for(size_t r = 0; r < m; r++){
-        for(size_t c = 0; c < n; c++){
-            double s = 0;
+    // auto t = a.split_block(tile_size);
+    // for(int i = 0; i < t.size(); i++)
+    //     for(int j = 0; j < t[i].size(); j++)
+    //         std::cout << t[i][j].reprString() << "=====\n";
+    
+    // 2D Vec
+    auto A = a.split_block(tile_size);
+    auto B = b.split_block(tile_size);
+    // std::cout << A.size() << ", " << A[0].size() << "\n";
+    // std::cout << B.size() << ", " << B[0].size() << "\n";
+    auto ans = Matrix(a.nrow(), b.ncol());
+
+    size_t m = A.size();
+    size_t k = B.size();
+    size_t n = B[0].size();
+
+    // Block Multiplication
+    for(size_t r = 0, row_id = 0; r < m; r++){
+        size_t mm = A[r][0].nrow();
+        
+        for(size_t c = 0, col_id = 0; c < n; c++){
+            size_t nn = B[0][c].ncol();
+            Matrix s(mm, nn);
+            
             for(size_t i = 0; i < k; i++){
-                s += a(r, i) * b(i, c);
+                s += multiply_naive(A[r][i], B[i][c]);
             }
-            ans(r, c) = s;
+            ans.set_block(s, row_id, col_id, mm, nn);
+            col_id += nn;
         }
+        row_id += mm;
     }
     return ans;
 }
+
+// int main()
+// {
+//     Matrix a(9, 8);
+//     for(int i = 0; i < 9; ++i)
+//         a.set_data(i, i);
+//     multiply_tile(a, a);
+// }
 
 PYBIND11_MODULE(_matrix, m){
     m.def("multiply_naive", &multiply_naive);
