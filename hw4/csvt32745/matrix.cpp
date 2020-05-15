@@ -292,16 +292,8 @@ Matrix multiply_mkl(const Matrix& a, const Matrix& b)
 
 
 
-Matrix multiply_tile(const Matrix& a, const Matrix& b)
+Matrix multiply_tile(const Matrix& a, const Matrix& b, size_t tile_size)
 {
-    const size_t tile_size = 2 << 7;
-    
-
-    // auto t = a.split_block(tile_size);
-    // for(int i = 0; i < t.size(); i++)
-    //     for(int j = 0; j < t[i].size(); j++)
-    //         std::cout << t[i][j].reprString() << "=====\n";
-    
     // 2D Vec
     auto A = a.split_block(tile_size);
     auto B = b.split_block(tile_size);
@@ -331,14 +323,6 @@ Matrix multiply_tile(const Matrix& a, const Matrix& b)
     }
     return ans;
 }
-
-// int main()
-// {
-//     Matrix a(9, 8);
-//     for(int i = 0; i < 9; ++i)
-//         a.set_data(i, i);
-//     multiply_tile(a, a);
-// }
 
 PYBIND11_MODULE(_matrix, m){
     m.def("multiply_naive", &multiply_naive);
