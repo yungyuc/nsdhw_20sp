@@ -38,11 +38,6 @@ SRC_NAME=matrix
 default: _matrix
 _matrix: matrix.cpp
 	${CXX} $^ ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
-	
-.PHONY: test
-test:
-	${CXX} ${SRC_NAME}.cpp ${CXXFLAGS} -o ${SRC_NAME}`python3-config --extension-suffix` 
-	python3 -m pytest -v -s
 
 .PHONY: clean
 clean:
