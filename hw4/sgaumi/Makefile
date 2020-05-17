@@ -36,7 +36,7 @@ CXXFLAGS := ${CXXFLAGS} \
 
 
 .PHONY: default
-default: _matrix
+default: matrix
 
 matrix: _matrix.cpp
 	${CXX} ${CXXFLAGS} _matrix.cpp -o _matrix`python3-config --extension-suffix`
