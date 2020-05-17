@@ -40,7 +40,6 @@ class test_python(unittest.TestCase):
 		self.assertTrue(test1==test2)
 
 
-
 	def test_multiplynaive(self):
 		r=rd.randint(1,100)
 		c=rd.randint(1,100)
@@ -79,7 +78,7 @@ class test_python(unittest.TestCase):
 		k=rd.randint(1,100)
 		m1=Matrix(rd.random((r,k)))
 		m2=Matrix(rd.random((k,c)))
-		mulc=multiply_tile(m1,m2,64)
+		mulc=multiply_tile(m1,m2,8)
 		mulp=multiply_naive_python(m1,m2)
 
 		self.assertEqual(mulc.nrow,r)
@@ -87,7 +86,8 @@ class test_python(unittest.TestCase):
 
 		for i in range(0,r):
 			for j in range(0,c):
-				print("i={},j={} : tile : {} == naive : {}".format(i,j,mulc[i,j],mulp[i,j]))
+				print("i={},j={} : tile : {} == naive : {} ".format(i,j,mulc[i,j],mulp[i,j]))
+				print("r={} c={} k={}".format(r,c,k))
 				self.assertTrue(np.allclose(mulc[i,j],mulp[i,j]))
 
 
@@ -123,7 +123,7 @@ class test_python(unittest.TestCase):
 		i+=1
 
 		timer_start=time.time()
-		mulc_mkl=multiply_tile(m1,m2,64)
+		mulc_mkl=multiply_tile(m1,m2,8)
 		timer_stop=time.time()
 		timer.append(timer_stop-timer_start)
 		i_mulctile=i
@@ -137,7 +137,7 @@ class test_python(unittest.TestCase):
 			fil.write("Performance test for matrix multiplication:\n")
 			fil.write("multiply_naive : {} seconds\n".format(timer[i_mulcnaive]))
 			fil.write("multiply_mkl : {} seconds\n".format(timer[i_mulcmkl]))
-			fil.write("multiply_tile : {} seconds\n".format(timer[i_mulctile]))
+			fil.write("multiply_tile (tsize=8): {} seconds\n".format(timer[i_mulctile]))
 			#fil.write("( multiply_naive_python : {} seconds )\n".format(timer[i_mulpnaive]))
 			fil.write("speedup of {}% from naive to tile multiplication\n".format(speedup))
 			fil.write("(runtime for tile multiplication is {}% of naive multiplication one)\n".format(runtime))
