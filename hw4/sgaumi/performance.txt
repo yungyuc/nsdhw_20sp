@@ -1,7 +1,8 @@
-matrix 1 : 1370 rows 1457 columns
-matrix 2 : 1457 rows 1061 columns
+matrix 1 : 1213 rows 1351 columns
+matrix 2 : 1351 rows 1469 columns
 Performance test for matrix multiplication:
-multiply_naive : 26.596051454544067 seconds
-multiply_tile (tsize=8): 17.014570951461792 seconds
-speedup of 36.025951143380084% from naive to tile multiplication
-(runtime for tile multiplication is 63.974048856619916% of naive multiplication one)
+multiply_naive : 32.44896674156189 seconds
+multiply_mkl : 0.6189849376678467 seconds
+multiply_tile (tsize=8): 19.49691605567932 seconds
+speedup of 39.91514056222037% from naive to tile multiplication
+(runtime for tile multiplication is 60.08485943777963% of naive multiplication one)
