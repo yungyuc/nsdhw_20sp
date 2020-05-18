@@ -95,36 +95,24 @@ Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, const int tsize)
 {
     validate_multiplication(mat1, mat2);
 
+    Tiler tiler(mat1, mat2, tsize);
+    //std::cout << tiler.nrow() << " " << tiler.ncol() << " " << tiler.nmid() << std::endl;
+
     // New matrix to be returned
     Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
-    for (size_t it=0, b_row=mat1.m_nrow%tsize; it<mat1.m_nrow; it+=b_row, b_row=tsize)
+    for (size_t it=0, save_i=0, b_row=mat1.m_nrow%tsize; it<tiler.nrow(); it++, save_i+=b_row, b_row=tsize)
     {
-        //Getting output row size of block
-        //size_t r_row = mat1.m_nrow-it;
-        //if ( r_row >= tsize) b_row = tsize;
-        //else b_row = r_row;
-        for (size_t kt=0, b_col=mat2.m_ncol%tsize; kt<mat2.m_ncol; kt+=b_col, b_col=tsize)
+        for (size_t kt=0, save_k=0, b_col=mat2.m_ncol%tsize; kt<tiler.ncol(); kt++, save_k+=b_col, b_col=tsize)
         {
-            //Getting output column size of block
-            //size_t r_col = mat2.m_ncol-kt;
-            //if ( r_col >= tsize) b_col = tsize;
-            //else b_col = r_col;
+            //std::cout << b_row << " " << b_col << std::endl;
             Block value(b_row, b_col);
 
-            for (size_t jt=0, b_mid=mat1.m_ncol%tsize; jt<mat1.m_ncol; jt+=b_mid, b_mid=tsize)
+            for (size_t jt=0; jt<tiler.nmid(); jt++)
             {
-                //Getting size for mid of block multiplication
-                //size_t r_mid = mat1.m_ncol-jt;
-                //if ( r_mid >= tsize) b_mid = tsize;
-                //else b_mid = r_mid;
-
-                Tiler tiler(b_row, b_mid, b_col);
-
-                tiler.load(mat1, it, jt, mat2, jt, kt);
-                tiler.multiply(value);
+                tiler.multiply(value, it, jt, kt);
             }
-            value.save(ret, it, kt);
+            value.save(ret, save_i, save_k);
         }
     }
 

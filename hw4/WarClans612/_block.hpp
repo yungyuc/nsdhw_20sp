@@ -30,5 +30,6 @@ private:
 
     size_t NDIM_row;
     size_t NDIM_col;
+public:
     std::vector<double> m_buffer;
 };

@@ -5,49 +5,81 @@
 #include "_tiler.hpp"
 
 // default contructor
-Tiler::Tiler(size_t N_row, size_t N_mid, size_t N_col)
-    : NDIM_row(N_row), NDIM_mid(N_mid), NDIM_col(N_col), m_mat1(N_row, N_mid), m_mat2(N_col, N_mid)
+Tiler::Tiler(const Matrix &mat1, const Matrix &mat2, size_t tsize)
 {
+    //Load Matrix 1
+    for (size_t it=0, b_row=mat1.nrow()%tsize; it<mat1.nrow(); it+=b_row, b_row=tsize)
+    {
+        std::vector<Block> temp;
+        for (size_t jt=0, b_mid=mat1.ncol()%tsize; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
+        {
+            temp.push_back(load1(mat1, it, jt, b_row, b_mid));
+        }
+        m_mat1.push_back(temp);
+    }
 
+    //Load Matrix 2
+    for (size_t kt=0, b_col=mat2.ncol()%tsize; kt<mat2.ncol(); kt+=b_col, b_col=tsize)
+    {
+        std::vector<Block> temp;
+        for (size_t jt=0, b_mid=mat1.ncol()%tsize; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
+        {
+            temp.push_back(load2(mat2, jt, kt, b_col, b_mid));
+        }
+        m_mat2.push_back(temp);
+    }
+
+    m_nrow = m_mat1.size();
+    m_ncol = m_mat2.size();
+    m_nmid = m_mat1.at(0).size();
 }
 
-void Tiler::load(
-    Matrix const & mat1, size_t it1, size_t jt1,
-    Matrix const & mat2, size_t it2, size_t jt2
-)
+Block Tiler::load1(Matrix const & mat1, size_t it1, size_t jt1, size_t NDIM_row, size_t NDIM_mid)
 {
     //const size_t nrow1 = mat1.nrow();
+    Block ret(NDIM_row, NDIM_mid);
     const size_t ncol1 = mat1.ncol();
     for (size_t i=0, base_t1=0, base_s1=it1*ncol1+jt1; i<NDIM_row; ++i, base_t1+=NDIM_mid, base_s1 += ncol1)
     {
         for (size_t j=0; j<NDIM_mid; ++j)
         {
-            m_mat1(base_t1 + j) = mat1(base_s1 + j);
+            ret(base_t1 + j) = mat1(base_s1 + j);
         }
     }
+    return ret;
+}
 
+Block Tiler::load2(Matrix const & mat2, size_t it2, size_t jt2, size_t NDIM_col, size_t NDIM_mid)
+{
     //const size_t nrow2 = mat2.nrow();
+    Block ret(NDIM_col, NDIM_mid);
     const size_t ncol2 = mat2.ncol();
     for(size_t i=0, base_s2=it2*ncol2+jt2; i<NDIM_mid; ++i, base_s2 += ncol2)
     {
         for (size_t j=0, base_t2=0; j<NDIM_col; ++j, base_t2+=NDIM_mid)
         {
-            m_mat2(base_t2 + i) = mat2(base_s2 + j);
+            ret(base_t2 + i) = mat2(base_s2 + j);
         }
     }
+    return ret;
 }
 
-void Tiler::multiply(Block &m_ret)
+void Tiler::multiply(Block &m_ret, size_t it, size_t jt, size_t kt)
 {
     double v;
-    for (size_t i=0; i<NDIM_row; ++i)
+    size_t ret_row = m_mat1[it][jt].nrow();
+    size_t ret_col = m_mat2[kt][jt].nrow();
+    size_t ret_mid = m_mat1[it][jt].ncol();
+    Block left = m_mat1[it][jt];
+    Block right = m_mat2[kt][jt];
+    for (size_t i=0; i<ret_row; ++i)
     {
-        for (size_t k=0; k<NDIM_col; ++k)
+        for (size_t k=0; k<ret_col; ++k)
         {
             v = 0;
-            for (size_t j=0; j<NDIM_mid; ++j)
+            for (size_t j=0; j<ret_mid; ++j)
             {
-                v += m_mat1(i, j) * m_mat2(k, j);
+                v += left(i, j) * right(k, j);
             }
             m_ret(i, k) += v;
         }
