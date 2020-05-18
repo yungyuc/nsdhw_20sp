@@ -96,16 +96,20 @@ Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, const int tsize)
     validate_multiplication(mat1, mat2);
 
     Tiler tiler(mat1, mat2, tsize);
-    //std::cout << tiler.nrow() << " " << tiler.ncol() << " " << tiler.nmid() << std::endl;
 
     // New matrix to be returned
     Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
-    for (size_t it=0, save_i=0, b_row=mat1.m_nrow%tsize; it<tiler.nrow(); it++, save_i+=b_row, b_row=tsize)
+    size_t init_b_col = mat2.m_ncol%tsize;
+
+    size_t save_i=0;
+    size_t b_row=mat1.m_nrow%tsize;
+    for (size_t it=0; it<tiler.nrow(); it++)
     {
-        for (size_t kt=0, save_k=0, b_col=mat2.m_ncol%tsize; kt<tiler.ncol(); kt++, save_k+=b_col, b_col=tsize)
+        size_t save_k=0;
+        size_t b_col=init_b_col;
+        for (size_t kt=0; kt<tiler.ncol(); kt++)
         {
-            //std::cout << b_row << " " << b_col << std::endl;
             Block value(b_row, b_col);
 
             for (size_t jt=0; jt<tiler.nmid(); jt++)
@@ -113,7 +117,12 @@ Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, const int tsize)
                 tiler.multiply(value, it, jt, kt);
             }
             value.save(ret, save_i, save_k);
+
+            save_k+=b_col;
+            b_col=tsize;
         }
+        save_i+=b_row;
+        b_row=tsize;
     }
 
     return ret;
