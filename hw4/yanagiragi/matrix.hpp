@@ -100,6 +100,7 @@ class Matrix {
         double & operator() (size_t row, size_t col)       { return m_buffer[index(row, col)]; }
 
         static Matrix multiply_naive (const Matrix &left, const Matrix& right);
+        static Matrix multiply_tiling (const Matrix &left, const Matrix& right, int cacheline);
         static Matrix multiply_mkl (const Matrix &left, const Matrix& right);
 
         friend std::ostream & operator<< (std::ostream & ostr, Matrix const & mat);

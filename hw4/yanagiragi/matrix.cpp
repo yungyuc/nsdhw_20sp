@@ -67,6 +67,46 @@ Matrix Matrix::multiply_naive (const Matrix &left, const Matrix& right)
     return ret;
 }
 
+Matrix Matrix::multiply_tiling (const Matrix &left, const Matrix& right, int cacheline) 
+{
+    if (left.ncol() != right.nrow()) {
+        throw std::out_of_range("Error Size");
+    }
+
+    Matrix ret(left.nrow(), right.ncol());
+
+    const int blocksize = cacheline / sizeof(double);
+
+    for(int i = 0; i < ret.nrow(); i += blocksize) {
+        const bool isExceedBound = ((i + blocksize) > ret.nrow());
+        const int index_i = isExceedBound ? ret.nrow() : (i + blocksize); // clamp the size if out of bound
+        
+        for (int j = 0; j < ret.ncol(); j += blocksize) {
+            const bool isExceedBound = ((j + blocksize) > ret.ncol());
+            const int index_j = isExceedBound ? ret.ncol() : (j + blocksize);
+
+            for (int k = 0; k < left.ncol(); k += blocksize) {
+                const bool isExceedBound = ((k + blocksize) > left.ncol());
+                const int index_k = isExceedBound ? left.ncol() : (k + blocksize);
+
+                // do multiplication in blocks
+                for (int tile_i = i; tile_i < index_i; ++tile_i) {
+                    for (int tile_j = j; tile_j < index_j; ++tile_j) {
+                        double v = 0;
+                        for (int tile_k = k; tile_k < index_k; ++tile_k) {
+                            v += left(tile_i, tile_k) * right(tile_k, tile_j);
+                        }
+                        ret(tile_i, tile_j) += v; // use += instead of =
+                    }
+                }
+
+            }
+        }
+    }
+
+    return ret;
+}
+
 Matrix Matrix::multiply_mkl (const Matrix &left, const Matrix& right) 
 {
     if (left.ncol() != right.nrow()) {
