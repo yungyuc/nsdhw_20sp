@@ -40,12 +40,12 @@ int main(int argc, char ** argv)
         std::cout << "\n\n>>> B(" << randomRow << "x"  << randomCol << ") times A(" << randomCol << "x" << randomRow << "):" << std::endl;
 
         if (test == 3) {
-            std::cout << "(Testing Large Matrix, it might take longer than one minutes...)"  << std::endl;
+            std::cout << "(Testing Large Matrix, it might take longer than five minutes...)"  << std::endl;
         }
 
         std::vector<double> randomVector;
         for(long i = 0; i < randomCol * randomRow; ++i) {
-            randomVector.push_back(i % 10);
+            randomVector.push_back(rand() / RAND_MAX);
         }
 
         Matrix mat5(randomRow, randomCol, randomVector);

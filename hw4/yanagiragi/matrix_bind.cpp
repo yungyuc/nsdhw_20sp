@@ -4,6 +4,8 @@
 #include "matrix.hpp"
 #include <mkl.h>
 
+#define COL_MAJOR
+
 namespace py = pybind11;
 
 Matrix multiply_naive (const Matrix &left, const Matrix& right) 
@@ -82,6 +84,53 @@ Matrix multiply_mkl (const Matrix &left, const Matrix& right)
     return ret;
 }
 
+
+Matrix multiply_tiling (const Matrix &left, const Matrix& right, size_t cacheline) 
+{
+    if (left.ncol() != right.nrow()) {
+        throw std::out_of_range("Error Size");
+    }
+
+    Matrix ret(left.nrow(), right.ncol());
+
+    for(size_t i = 0; i < left.nrow(); ++i) {
+        for (size_t j = 0; j < right.ncol(); ++j) {
+            ret(i, j) = 0.0;
+        }
+    }
+
+    const size_t blocksize = cacheline / sizeof(double);
+    
+    for(size_t i = 0; i < ret.nrow(); i += blocksize) {
+        const bool isExceedBound = ((i + blocksize) > ret.nrow());
+        const size_t index_i = isExceedBound ? ret.nrow() : (i + blocksize); // clamp the size if out of bound
+        
+        for (size_t j = 0; j < ret.ncol(); j += blocksize) {
+            const bool isExceedBound = ((j + blocksize) > ret.ncol());
+            const size_t index_j = isExceedBound ? ret.ncol() : (j + blocksize);
+
+            for (size_t k = 0; k < left.ncol(); k += blocksize) {
+                const bool isExceedBound = ((k + blocksize) > left.ncol());
+                const size_t index_k = isExceedBound ? left.ncol() : (k + blocksize);
+
+                // do multiplication in blocks
+                for (size_t tile_i = i; tile_i < index_i; ++tile_i) {
+                    for (size_t tile_j = j; tile_j < index_j; ++tile_j) {
+                        double v = 0;
+                        for (size_t tile_k = k; tile_k < index_k; ++tile_k) {
+                            v += left(tile_i, tile_k) * right(tile_k, tile_j);
+                        }
+                        ret(tile_i, tile_j) += v; // use += instead of =
+                    }
+                }
+
+            }
+        }
+    }
+
+    return ret;
+}
+
 PYBIND11_MODULE(_matrix, m) {
 
     /*#ifdef ROW_MAJOR
@@ -93,6 +142,7 @@ PYBIND11_MODULE(_matrix, m) {
     m.doc() = "nsdhw_20sp hw3 (yanagiragi)"; // optional module docstring
     m.def("multiply_mkl", &multiply_mkl);
     m.def("multiply_naive", &multiply_naive);
+    m.def("multiply_tile", &multiply_tiling);
     py::class_<Matrix>(m, "Matrix", py::buffer_protocol())        
         
     // constructors

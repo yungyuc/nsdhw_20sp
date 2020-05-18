@@ -74,6 +74,11 @@ Matrix Matrix::multiply_tiling (const Matrix &left, const Matrix& right, int cac
     }
 
     Matrix ret(left.nrow(), right.ncol());
+    for(size_t i = 0; i < left.nrow(); ++i) {
+        for (size_t j = 0; j < right.ncol(); ++j) {
+            ret(i, j) = 0.0; // explicit clean the matrix since we "add" value to ret not "assign"
+        }
+    }
 
     const int blocksize = cacheline / sizeof(double);
 

@@ -9,6 +9,7 @@ def measure_time(m, k, n):
     testIter = 10
     elapsed_naive = 0
     elapsed_mkl = 0
+    elapsed_tile = 0
 
     for idx in range(testIter):        
         a_np = np.random.randn(m, k)
@@ -27,8 +28,14 @@ def measure_time(m, k, n):
         end = time.time()
         elapsed_mkl += end - start
 
+        start = time.time()
+        c_mat_tile = _matrix.multiply_tile(a_mat, b_mat, 64)
+        end = time.time()
+        elapsed_tile += end - start
+
     with open('performance.txt', 'a') as f:
-        f.write('({}, {}, {}) Naive: {} sec, MKL: {} sec\n'.format(m, k, n, elapsed_naive, elapsed_mkl))
+        f.write('({}, {}, {}) Naive: {} sec, MKL: {} sec, Tile: {} sec\n'.format(m, k, n, elapsed_naive, elapsed_mkl, elapsed_tile))
+        f.write('Tiling Speedup: {}x\n'.format(elapsed_naive / elapsed_tile))
 
 class matrix_test(unittest.TestCase):
     
@@ -38,7 +45,7 @@ class matrix_test(unittest.TestCase):
             measure_time(m, k, n)
 
     def test_answer(self):        
-        testIter = 100        
+        testIter = 100
         for idx in range(testIter):
             
             m, n, k = np.random.randint(1, 10, size=3)
@@ -52,11 +59,15 @@ class matrix_test(unittest.TestCase):
             
             c_mat_naive = _matrix.multiply_naive(a_mat, b_mat)
             c_mat_mkl = _matrix.multiply_mkl(a_mat, b_mat)
+            c_mat_tile = _matrix.multiply_tile(a_mat, b_mat, 64)
+            print(c_mat_tile)
             
             for i in range(m):
                 for j in range(n):
                     self.assertTrue( abs( c_np[i,j] - c_mat_naive[i, j] ) < 0.001 )
                     self.assertTrue( abs( c_np[i,j] - c_mat_mkl[i, j] ) < 0.001 )
+                    print(c_np[i,j], c_mat_mkl[i, j], c_mat_tile[i, j])
+                    self.assertTrue( abs( c_np[i,j] - c_mat_tile[i, j] ) < 0.001 )
 
             """
             print('A = ', a_np)
