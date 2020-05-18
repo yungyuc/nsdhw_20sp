@@ -5,8 +5,8 @@
 #include "_tiler.hpp"
 
 // default contructor
-Tiler::Tiler(size_t N)
-    : NDIM(N), m_mat1(N), m_mat2(N)
+Tiler::Tiler(size_t N_row, size_t N_mid, size_t N_col)
+    : NDIM_row(N_row), NDIM_mid(N_mid), NDIM_col(N_col), m_mat1(N_row, N_mid), m_mat2(N_col, N_mid)
 {
 
 }
@@ -18,17 +18,20 @@ void Tiler::load(
 {
     //const size_t nrow1 = mat1.nrow();
     const size_t ncol1 = mat1.ncol();
-    //const size_t nrow2 = mat2.nrow();
-    const size_t ncol2 = mat2.ncol();
-
-    for (size_t i=0, base_t1=0; i<NDIM; ++i, base_t1+=NDIM)
+    for (size_t i=0, base_t1=0, base_s1=it1*ncol1+jt1; i<NDIM_row; ++i, base_t1+=NDIM_mid, base_s1 += ncol1)
     {
-        const size_t base_s1 = (it1 + i)*ncol1 + jt1;
-        const size_t base_s2 = (it2 + i)*ncol2 + jt2;
-
-        for (size_t j=0, base_t2=0; j<NDIM; ++j, base_t2+=NDIM)
+        for (size_t j=0; j<NDIM_mid; ++j)
         {
             m_mat1(base_t1 + j) = mat1(base_s1 + j);
+        }
+    }
+
+    //const size_t nrow2 = mat2.nrow();
+    const size_t ncol2 = mat2.ncol();
+    for(size_t i=0, base_s2=it2*ncol2+jt2; i<NDIM_mid; ++i, base_s2 += ncol2)
+    {
+        for (size_t j=0, base_t2=0; j<NDIM_col; ++j, base_t2+=NDIM_mid)
+        {
             m_mat2(base_t2 + i) = mat2(base_s2 + j);
         }
     }
@@ -36,12 +39,13 @@ void Tiler::load(
 
 void Tiler::multiply(Block &m_ret)
 {
-    for (size_t i=0; i<NDIM; ++i)
+    double v;
+    for (size_t i=0; i<NDIM_row; ++i)
     {
-        for (size_t k=0; k<NDIM; ++k)
+        for (size_t k=0; k<NDIM_col; ++k)
         {
-            double v = 0;
-            for (size_t j=0; j<NDIM; ++j)
+            v = 0;
+            for (size_t j=0; j<NDIM_mid; ++j)
             {
                 v += m_mat1(i, j) * m_mat2(k, j);
             }

@@ -15,8 +15,8 @@ Matrix::Matrix(size_t nrow, size_t ncol)
 }
 
 // copy constructor
-Matrix::Matrix(Matrix const & other, int x_pad=0, int y_pad=0)
-    : m_nrow(other.m_nrow+x_pad), m_ncol(other.m_ncol+y_pad), m_buffer((other.m_nrow+x_pad) * (other.m_ncol+y_pad), 0)
+Matrix::Matrix(Matrix const & other)
+    : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_buffer((other.m_nrow) * (other.m_ncol), 0)
 {
     for(size_t i=0; i < m_nrow; ++i)
     {
@@ -40,24 +40,6 @@ Matrix::Matrix(std::vector<std::vector<double>> const & other)
 {
     for(const auto &v: other)
         m_buffer.insert(m_buffer.end(), v.begin(), v.end()); 
-}
-
-void Matrix::unpad(int x_pad, int y_pad)
-{
-    size_t x = m_nrow-x_pad;
-    size_t y = m_ncol-y_pad;
-    std::vector<double> temp(x*y);
-    for(size_t i=0; i < x; ++i)
-    {
-        const size_t base_t = i*y;
-        const size_t base_s = i*m_ncol;
-        for (size_t j=0; j < y; ++j)
-            temp.at(base_t + j) = m_buffer.at(base_s + j);
-    }
-    m_buffer.resize(x*y);
-    m_buffer.swap(temp);
-    m_nrow = x;
-    m_ncol = y;
 }
 
 void validate_multiplication(const Matrix &mat1, const Matrix &mat2)
@@ -109,31 +91,36 @@ Matrix multiply_mkl(const Matrix &mat1, const Matrix &mat2)
     return ret;
 };
 
-Matrix multiply_tile(const Matrix &m1, const Matrix &m2, const int tsize)
+Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, const int tsize)
 {
-    int lsize = tsize;
-    validate_multiplication(m1, m2);
-
-    const int nx1 = ((m1.m_nrow/lsize) + (m1.m_nrow%lsize != 0)) * lsize - m1.m_nrow;
-    const int ny1 = ((m1.m_ncol/lsize) + (m1.m_ncol%lsize != 0)) * lsize - m1.m_ncol;
-    const int nx2 = ((m2.m_nrow/lsize) + (m2.m_nrow%lsize != 0)) * lsize - m2.m_nrow;
-    const int ny2 = ((m2.m_ncol/lsize) + (m2.m_ncol%lsize != 0)) * lsize - m2.m_ncol;
-    Matrix mat1(m1, nx1, ny1);
-    Matrix mat2(m2, nx2, ny2);
+    validate_multiplication(mat1, mat2);
 
     // New matrix to be returned
     Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
-    Block value(lsize);
-    Tiler tiler(lsize);
-
-    for (size_t it=0; it<mat1.m_nrow; it+=lsize)
+    for (size_t it=0, b_row=mat1.m_nrow%tsize; it<mat1.m_nrow; it+=b_row, b_row=tsize)
     {
-        for (size_t kt=0; kt<mat2.m_ncol; kt+=lsize)
+        //Getting output row size of block
+        //size_t r_row = mat1.m_nrow-it;
+        //if ( r_row >= tsize) b_row = tsize;
+        //else b_row = r_row;
+        for (size_t kt=0, b_col=mat2.m_ncol%tsize; kt<mat2.m_ncol; kt+=b_col, b_col=tsize)
         {
-            value = 0;
-            for (size_t jt=0; jt<mat1.m_ncol; jt+=lsize)
+            //Getting output column size of block
+            //size_t r_col = mat2.m_ncol-kt;
+            //if ( r_col >= tsize) b_col = tsize;
+            //else b_col = r_col;
+            Block value(b_row, b_col);
+
+            for (size_t jt=0, b_mid=mat1.m_ncol%tsize; jt<mat1.m_ncol; jt+=b_mid, b_mid=tsize)
             {
+                //Getting size for mid of block multiplication
+                //size_t r_mid = mat1.m_ncol-jt;
+                //if ( r_mid >= tsize) b_mid = tsize;
+                //else b_mid = r_mid;
+
+                Tiler tiler(b_row, b_mid, b_col);
+
                 tiler.load(mat1, it, jt, mat2, jt, kt);
                 tiler.multiply(value);
             }
@@ -141,6 +128,5 @@ Matrix multiply_tile(const Matrix &m1, const Matrix &m2, const int tsize)
         }
     }
 
-    ret.unpad(nx1, ny2);
     return ret;
 }

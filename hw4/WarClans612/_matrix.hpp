@@ -9,7 +9,7 @@ class Matrix {
 public:
 
     Matrix(size_t nrow, size_t ncol);
-    Matrix(Matrix const & other, int x_pad, int y_pad);
+    Matrix(Matrix const & other);
     Matrix(Matrix && other);
     Matrix(std::vector<std::vector<double>> const & other);
 
@@ -25,7 +25,6 @@ public:
     double & operator() (size_t row, size_t col)       { return m_buffer.at( index(row, col) ); }
     double   operator() (size_t idx) const { return m_buffer.at( idx ); }
     double & operator() (size_t idx)       { return m_buffer.at( idx ); }
-    void unpad(int x_pad, int y_pad);
 
     bool operator== (Matrix const &other)
     {
