@@ -103,14 +103,16 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
     Matrix ret(m, n);
     
     // right.transpose();
-    
     for (size_t k = 0; k < p; k += left_col) {
+        auto tile_k_bound = MIN(k + left_col, p);
         for(size_t i = 0; i < m; i += left_row) {
+            auto tile_i_bound = MIN(i + left_row, m);
             for (size_t j = 0; j < n; j += right_col) {
-                for (size_t tile_k = k; tile_k < MIN(k + left_col, p); ++tile_k) {                 
-                    for (size_t tile_i = i; tile_i < MIN(i + left_row, m); ++tile_i) {    
-                        auto r = left(tile_i, tile_k);
-                        for (size_t tile_j = j; tile_j < MIN(j + right_col, n); ++tile_j) {        
+                auto tile_j_bound = MIN(j + right_col, n);
+                for (size_t tile_k = k; tile_k < tile_k_bound; ++tile_k) {                    
+                    for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
+                        auto r = left(tile_i, tile_k);                        
+                        for (size_t tile_j = j; tile_j < tile_j_bound; ++tile_j) {        
                             ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
                             
                             // Ref: https://edisonx.pixnet.net/blog/post/91005914
