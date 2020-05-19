@@ -18,10 +18,10 @@ public:
 
   double & operator() (size_t i, size_t j)       { if (i >= m_nrow || j >= m_ncol) throw pybind11::index_error(); return matrix_data[i * m_ncol + j];}
 
-  size_t nrow() const { return m_nrow; }
-  size_t ncol() const { return m_ncol; }
+  constexpr size_t nrow() const { return m_nrow; }
+  constexpr size_t ncol() const { return m_ncol; }
 
-  bool operator == (const Matrix &second_matrix) const {
+  constexpr bool operator == (const Matrix &second_matrix) const {
     if (m_nrow == second_matrix.m_nrow){
       if (m_ncol == second_matrix.m_ncol){
         if (matrix_data == second_matrix.matrix_data){
@@ -37,7 +37,7 @@ public:
           return false;
     }
   }
-  bool operator != (const Matrix &second_matrix) const { return !(*this == second_matrix); }
+  constexpr bool operator != (const Matrix &second_matrix) const { return !(*this == second_matrix); }
   size_t size() const { return m_nrow * m_ncol; }
   double buffer(size_t i) const { return m_buffer[i]; }
   std::vector<double> buffer_vector() const { return std::vector<double>(m_buffer, m_buffer+size()); }
@@ -101,10 +101,12 @@ Matrix multiply_mkl(const Matrix &first_matrix, const Matrix &second_matrix) {
   return result_matrix;
 }
 
+
 constexpr size_t tile_cur_value(int matrix_s, int tile_v) {
-  diff = ((matrix_s - tile_v) & (matrix_s - tile_v) >> 31)
+  size_t diff = ((matrix_s - tile_v) & (matrix_s - tile_v) >> 31);
   return tile_v + diff;
 }
+
 Matrix multiply_tile(const Matrix &first_matrix, const Matrix &second_matrix, size_t tile) {
   const size_t f_row = first_matrix.m_nrow;
   const size_t f_col = first_matrix.m_ncol;
@@ -119,11 +121,11 @@ Matrix multiply_tile(const Matrix &first_matrix, const Matrix &second_matrix, si
     for (size_t j_tile = 0; j_tile < s_col; j_tile += tile) {
       for (size_t k_tile = 0; k_tile < f_col; k_tile += tile) {
         //const size_t i_tile_cur = f_row + ((i_tile + tile - f_row) & (i_tile + tile - f_row) >> 31);
-        const size_t i_tile_cur = tile_cur_value((i_tile + tile),f_row)
+        const size_t i_tile_cur = tile_cur_value((i_tile + tile),f_row);
         //const size_t j_tile_cur = s_col + ((j_tile + tile - s_col) & (j_tile + tile - s_col) >> 31);
-        const size_t j_tile_cur = tile_cur_value((j_tile + tile),s_col)
+        const size_t j_tile_cur = tile_cur_value((j_tile + tile),s_col);
         //const size_t k_tile_cur = f_col + ((k_tile + tile - f_col) & (k_tile + tile - f_col) >> 31);
-        const size_t k_tile_cur = tile_cur_value((k_tile + tile),f_col)
+        const size_t k_tile_cur = tile_cur_value((k_tile + tile),f_col);
         for (size_t i = i_tile; i < i_tile_cur; ++i) {
           const size_t index = i * f_row;
           for (size_t j = j_tile; j < j_tile_cur; ++j) {
