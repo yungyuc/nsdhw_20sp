@@ -103,7 +103,7 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
     Matrix ret(m, n);
     
     // use cache to speedup transpose()
-    Matrix T(right.ncol(), right.nrow());
+    /*Matrix T(right.ncol(), right.nrow());
     constexpr size_t tblock = 64 / sizeof(double);
     const auto x = right.nrow();
     for (size_t i = 0; i < n; i += tblock) {
@@ -112,7 +112,7 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
                 T(j, i + b) = right(i + b, j);
             }
         }
-    }
+    }*/
 
     for (size_t k = 0; k < p; k += left_col) {
         const size_t tile_k_bound = MIN(k + left_col, p);
@@ -124,10 +124,10 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
                     for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
                         const double r = left(tile_i, tile_k);                        
                         for (size_t tile_j = j; tile_j < tile_j_bound; ++tile_j) {        
-                            // ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
+                            ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
                             
                             // Ref: https://edisonx.pixnet.net/blog/post/91005914
-                            ret(tile_i, tile_j) += r * T(tile_j, tile_k); // transpose version, slower
+                            // ret(tile_i, tile_j) += r * T(tile_j, tile_k); // transpose version
                         }
                     }
                 }
@@ -146,10 +146,12 @@ PYBIND11_MODULE(_matrix, m) {
         printf("MKL: Use Col Major\n");
     #endif*/
     
-    m.doc() = "nsdhw_20sp hw3 (yanagiragi)"; // optional module docstring
+    m.doc() = "nsdhw_20sp hw4 (yanagiragi)"; // optional module docstring
+    
     m.def("multiply_mkl", &multiply_mkl);
     m.def("multiply_naive", &multiply_naive);
     m.def("multiply_tile", &multiply_tiling);
+
     py::class_<Matrix>(m, "Matrix", py::buffer_protocol())        
         
     // constructors

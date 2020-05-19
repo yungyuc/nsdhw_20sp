@@ -29,7 +29,7 @@ def measure_time(m, k, n):
         elapsed_mkl += end - start
 
         start = time.time()
-        c_mat_tile = _matrix.multiply_tile(a_mat, b_mat, 64)
+        # c_mat_tile = _matrix.multiply_tile(a_mat, b_mat, 64)
         end = time.time()
         elapsed_tile += end - start
 
@@ -60,22 +60,15 @@ class matrix_test(unittest.TestCase):
             c_mat_naive = _matrix.multiply_naive(a_mat, b_mat)
             c_mat_mkl = _matrix.multiply_mkl(a_mat, b_mat)
             c_mat_tile = _matrix.multiply_tile(a_mat, b_mat, 64)
-            print(c_mat_tile)
+            #print(c_mat_tile)
             
             for i in range(m):
                 for j in range(n):
                     self.assertTrue( abs( c_np[i,j] - c_mat_naive[i, j] ) < 0.001 )
                     self.assertTrue( abs( c_np[i,j] - c_mat_mkl[i, j] ) < 0.001 )
-                    print(c_np[i,j], c_mat_mkl[i, j], c_mat_tile[i, j])
+                    #print(c_np[i,j], c_mat_tile[i, j])
                     self.assertTrue( abs( c_np[i,j] - c_mat_tile[i, j] ) < 0.001 )
 
-            """
-            print('A = ', a_np)
-            print('B = ', b_np)
-            print('Result From Numpy = ', c_np)
-            print('Result From Naive = ', c_mat_naive)
-            print('Result From MKL   = ', c_mat_mkl)
-            """
 
 if __name__ == "__main__":
     unittest.main()
