@@ -6,7 +6,7 @@ import pytest
 from _matrix import Matrix, multiply_naive, multiply_mkl, multiply_tile
 
 def test_multiply_naive():
-    for i in range(3):
+    for i in range(2):
         m = np.random.randint(200, 400)
         n = np.random.randint(200, 400)
         k = np.random.randint(200, 400)
@@ -21,7 +21,7 @@ def test_multiply_naive():
         assert np.array(naive_ans) == pytest.approx(np.matmul(np_mat1, np_mat2))
 
 def test_multiply_mkl():
-    for i in range(3):
+    for i in range(2):
         m = np.random.randint(200, 400)
         n = np.random.randint(200, 400)
         k = np.random.randint(200, 400)
@@ -38,7 +38,7 @@ def test_multiply_mkl():
 def test_multiply_tile():
     tsize_l = [16, 17, 19]
     for tsize in tsize_l:
-        for i in range(3):
+        for i in range(2):
             m = np.random.randint(200, 400)
             n = np.random.randint(200, 400)
             k = np.random.randint(200, 400)
@@ -53,44 +53,44 @@ def test_multiply_tile():
             assert np.array(tile_ans) == pytest.approx(np.matmul(np_mat1, np_mat2))
 
 def test_performance():
-    m = np.random.randint(1000, 2000)
-    n = np.random.randint(1000, 2000)
-    k = np.random.randint(1000, 2000)
+    m = np.random.randint(500, 501)
+    n = np.random.randint(500, 501)
+    k = np.random.randint(500, 501)
     np_mat1 = np.random.random((m, k))
     np_mat2 = np.random.random((k, n))
     mat1 = Matrix(np_mat1)
     mat2 = Matrix(np_mat2)
 
     naive_timing = []
-    for i in range(3):
+    for i in range(2):
         start = time.time()
         naive_ans = multiply_naive(mat1, mat2)
         end = time.time()
         naive_timing.append(end - start)
 
     mkl_timing = []
-    for i in range(3):
+    for i in range(2):
         start = time.time()
         mkl_ans = multiply_mkl(mat1, mat2)
         end = time.time()
         mkl_timing.append(end - start)
 
     tile16_timing = []
-    for i in range(3):
+    for i in range(2):
         start = time.time()
         tile16_ans = multiply_tile(mat1, mat2, 16)
         end = time.time()
         tile16_timing.append(end - start)
 
     tile17_timing = []
-    for i in range(3):
+    for i in range(2):
         start = time.time()
         tile17_ans = multiply_tile(mat1, mat2, 17)
         end = time.time()
         tile17_timing.append(end - start)
 
     tile19_timing = []
-    for i in range(3):
+    for i in range(2):
         start = time.time()
         tile19_ans = multiply_tile(mat1, mat2, 19)
         end = time.time()

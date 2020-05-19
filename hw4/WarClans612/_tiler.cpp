@@ -5,34 +5,27 @@
 
 // default contructor
 Tiler::Tiler(const Matrix &mat1, const Matrix &mat2, size_t tsize)
+    : m_mat1(mat1.nrow()/tsize + 1), m_mat2(mat2.ncol()/tsize + 1)
 {
     //Load Matrix 1
-    m_mat1.reserve(mat1.ncol()/tsize + 1);
     size_t init_b_mid=mat1.ncol()%tsize;
     size_t b_row=mat1.nrow()%tsize;
-    for (size_t it=0; it<mat1.nrow(); it+=b_row, b_row=tsize)
+    for (size_t it=0, id=0; it<mat1.nrow(); it+=b_row, ++id, b_row=tsize)
     {
-        std::vector<Matrix> temp;
-        temp.reserve(mat1.ncol()/tsize + 1);
         for (size_t jt=0, b_mid=init_b_mid; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
         {
-            temp.push_back(load1(mat1, it, jt, b_row, b_mid));
+            m_mat1[id].push_back(load1(mat1, it, jt, b_row, b_mid));
         }
-        m_mat1.push_back(temp);
     }
 
     //Load Matrix 2
-    m_mat2.reserve(mat2.ncol()/tsize + 1);
     size_t b_col=mat2.ncol()%tsize;
-    for (size_t kt=0; kt<mat2.ncol(); kt+=b_col, b_col=tsize)
+    for (size_t kt=0, id=0; kt<mat2.ncol(); kt+=b_col, ++id, b_col=tsize)
     {
-        std::vector<Matrix> temp;
-        temp.reserve(mat2.ncol()/tsize + 1);
         for (size_t jt=0, b_mid=init_b_mid; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
         {
-            temp.push_back(load2(mat2, jt, kt, b_col, b_mid));
+            m_mat2[id].push_back(load2(mat2, jt, kt, b_col, b_mid));
         }
-        m_mat2.push_back(temp);
     }
 
     m_nrow = m_mat1.size();
