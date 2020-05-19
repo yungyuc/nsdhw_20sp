@@ -18,10 +18,10 @@ public:
 
   double & operator() (size_t i, size_t j)       { if (i >= m_nrow || j >= m_ncol) throw pybind11::index_error(); return matrix_data[i * m_ncol + j];}
 
-  size_t nrow() const { return m_nrow; }
-  size_t ncol() const { return m_ncol; }
+  constexpr size_t nrow() const { return m_nrow; }
+  constexpr size_t ncol() const { return m_ncol; }
 
-  bool operator == (const Matrix &second_matrix) const {
+  constexpr bool operator == (const Matrix &second_matrix) const {
     if (m_nrow == second_matrix.m_nrow){
       if (m_ncol == second_matrix.m_ncol){
         if (matrix_data == second_matrix.matrix_data){
@@ -37,7 +37,7 @@ public:
           return false;
     }
   }
-  bool operator != (const Matrix &second_matrix) const { return !(*this == second_matrix); }
+  constexpr bool operator != (const Matrix &second_matrix) const { return !(*this == second_matrix); }
   size_t size() const { return m_nrow * m_ncol; }
   double buffer(size_t i) const { return m_buffer[i]; }
   std::vector<double> buffer_vector() const { return std::vector<double>(m_buffer, m_buffer+size()); }
