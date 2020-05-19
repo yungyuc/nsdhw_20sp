@@ -96,9 +96,9 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
     const size_t p = left.ncol();
 
     // tiling size
-    const size_t left_row = m / tsize;
-    const size_t left_col = p / tsize;
-    const size_t right_col = n / tsize;
+    const size_t left_row = tsize;
+    const size_t left_col = tsize;
+    const size_t right_col = tsize;
 
     Matrix ret(m, n);
     
