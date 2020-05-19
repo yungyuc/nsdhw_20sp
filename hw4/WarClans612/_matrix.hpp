@@ -34,6 +34,19 @@ public:
         else return false;
     }
 
+    void save(Matrix &mat, size_t it, size_t jt)
+    {
+        const size_t ncol = mat.ncol();
+
+        for (size_t i=0, base_s=0, base_t=it*ncol+jt; i<m_nrow; ++i, base_s+=m_ncol, base_t+=ncol)
+        {
+            for (size_t j=0; j<m_ncol; ++j)
+            {
+                mat(base_t + j) = m_buffer.at(base_s + j);
+            }
+        }
+    }
+
     double *data() { return m_buffer.data(); }
     size_t nrow() const { return m_nrow; }
     size_t ncol() const { return m_ncol; }

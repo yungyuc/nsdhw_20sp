@@ -25,8 +25,6 @@ Block& Block::operator+= (Block const &other)
 void Block::save(Matrix &mat, size_t it, size_t jt)
 {
     const size_t ncol = mat.ncol();
-    size_t base_s;
-    size_t base_t;
 
     for (size_t i=0, base_s=0, base_t=it*ncol+jt; i<NDIM_row; ++i, base_s+=NDIM_col, base_t+=ncol)
     {

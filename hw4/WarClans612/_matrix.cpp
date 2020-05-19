@@ -4,7 +4,6 @@
 #include "mkl.h"
 
 #include "_matrix.hpp"
-#include "_block.hpp"
 #include "_tiler.hpp"
 
 // default contructor
@@ -108,9 +107,10 @@ Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, const int tsize)
     {
         size_t save_k=0;
         size_t b_col=init_b_col;
+
         for (size_t kt=0; kt<tiler.ncol(); kt++)
         {
-            Block value(b_row, b_col);
+            Matrix value(b_row, b_col);
 
             for (size_t jt=0; jt<tiler.nmid(); jt++)
             {

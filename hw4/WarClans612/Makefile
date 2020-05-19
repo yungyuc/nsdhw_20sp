@@ -36,14 +36,14 @@ PYBINDFLAGS := \
 	-fPIC `python3 -m pybind11 --includes`
 
 .PHONY: _matlink
-_matlink: _matrix _main.o _matrix.o _tiler.o _block.o
-	$(CXX) -shared -o _matrix`python3-config --extension-suffix` _main.o _matrix.o _tiler.o _block.o
+_matlink: _matrix _main.o _matrix.o _tiler.o
+	$(CXX) -shared -o _matrix`python3-config --extension-suffix` _main.o _matrix.o _tiler.o
 
 _matrix: _main.cpp
 	${CXX} $< ${CXXFLAGS} $(PYBINDFLAGS) -o $@`python3-config --extension-suffix`
 
 _main.o: _main.cpp
-	$(CXX) -c $< $(PYBINDFLAGS) -o $@ -fPIC
+	$(CXX) -c $< ${CXXGCOMPILE} $(PYBINDFLAGS) -o $@ -fPIC
 
 _matrix.o: _matrix.cpp _matrix.hpp Makefile
 	$(CXX) -c $< ${CXXGCOMPILE} -I${MKLROOT}/include -o $@ -fPIC
