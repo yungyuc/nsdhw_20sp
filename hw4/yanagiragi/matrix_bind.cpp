@@ -102,7 +102,16 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
 
     Matrix ret(m, n);
     
-    // right.transpose();
+    Matrix T(right.ncol(), right.nrow());
+
+    for (size_t i=0; i<T.nrow(); ++i)
+    {
+        for (size_t j=0; j<T.ncol(); ++j)
+        {
+            T(i, j) = right(j, i);
+        }
+    }
+
     for (size_t k = 0; k < p; k += left_col) {
         const size_t tile_k_bound = MIN(k + left_col, p);
         for(size_t i = 0; i < m; i += left_row) {
@@ -113,11 +122,10 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
                     for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
                         const double r = left(tile_i, tile_k);                        
                         for (size_t tile_j = j; tile_j < tile_j_bound; ++tile_j) {        
-                            ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
+                            // ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
                             
                             // Ref: https://edisonx.pixnet.net/blog/post/91005914
-                            // However transpose version seems to be slower
-                            // ret(tile_i, tile_j) += r * right(tile_j, tile_k); // transpose version, slower
+                            ret(tile_i, tile_j) += r * T(tile_j, tile_k); // transpose version, slower
                         }
                     }
                 }
