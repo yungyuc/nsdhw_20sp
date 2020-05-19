@@ -91,9 +91,9 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
         throw std::out_of_range("Error Size");
     }    
     
-    auto m = left.nrow();
-    auto n = right.ncol();
-    auto p = left.ncol();
+    const size_t m = left.nrow();
+    const size_t n = right.ncol();
+    const size_t p = left.ncol();
 
     // tiling size
     const size_t left_row = m / tsize;
@@ -104,11 +104,11 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
     
     // right.transpose();
     for (size_t k = 0; k < p; k += left_col) {
-        auto tile_k_bound = MIN(k + left_col, p);
+        const size_t tile_k_bound = MIN(k + left_col, p);
         for(size_t i = 0; i < m; i += left_row) {
-            auto tile_i_bound = MIN(i + left_row, m);
+            const size_t tile_i_bound = MIN(i + left_row, m);
             for (size_t j = 0; j < n; j += right_col) {
-                auto tile_j_bound = MIN(j + right_col, n);
+                const size_t tile_j_bound = MIN(j + right_col, n);
                 for (size_t tile_k = k; tile_k < tile_k_bound; ++tile_k) {                    
                     for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
                         auto r = left(tile_i, tile_k);                        
