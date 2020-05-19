@@ -28,6 +28,9 @@ CXXFLAGS := ${CXXFLAGS} \
 	${MKLLINKLINE} \
 	${FLAGS}
 
+CXXGCOMPILE := -std=c++17 -O3 \
+	-Wall -Wextra -Werror
+
 CXX = g++
 PYBINDFLAGS := \
 	-fPIC `python3 -m pybind11 --includes`
@@ -43,15 +46,18 @@ _main.o: _main.cpp
 	$(CXX) -c $< $(PYBINDFLAGS) -o $@ -fPIC
 
 _matrix.o: _matrix.cpp _matrix.hpp Makefile
-	$(CXX) -c $< -I${MKLROOT}/include -o $@ -fPIC
+	$(CXX) -c $< ${CXXGCOMPILE} -I${MKLROOT}/include -o $@ -fPIC
 
 %.o: %.cpp %.hpp Makefile
-	$(CXX) -c $< -o $@ -fPIC
+	$(CXX) -c $< ${CXXGCOMPILE} -o $@ -fPIC
 
 .PHONY: clean
 clean: 
-	rm -rf _matrix *.so *.o performance.txt __pycache__/
+	rm -rf _matrix *.so *.o performance.txt __pycache__/ .pytest_cache/ .cache/
 
 .PHONY: test
-test: _matlink
+test: clean _matlink Makefile
+	#$(CXX) -o _matrix _matrix.o _tiler.o _block.o
+	#./_matrix
+	#python test_matrix.py
 	py.test -v -l
