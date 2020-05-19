@@ -87,13 +87,13 @@ Matrix multiply_mkl (const Matrix &left, const Matrix& right)
 
 Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize) 
 {
-    if (left.ncol() != right.nrow()) {
-        throw std::out_of_range("Error Size");
-    }    
-    
     const size_t m = left.nrow();
     const size_t n = right.ncol();
     const size_t p = left.ncol();
+    
+    if (p != right.nrow()) {
+        throw std::out_of_range("Error Size");
+    }    
 
     // tiling size
     const size_t left_row = tsize;
@@ -103,30 +103,54 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
     Matrix ret(m, n);
     
     Matrix T(right.ncol(), right.nrow());
-
-    for (size_t i=0; i<T.nrow(); ++i)
-    {
-        for (size_t j=0; j<T.ncol(); ++j)
-        {
-            T(i, j) = right(j, i);
+    constexpr size_t tblock = 64 / sizeof(double);
+    const auto x = right.nrow();
+    for (size_t i = 0; i < n; i += tblock) {
+        for(size_t j = 0; j < x; ++j) {
+            for(size_t b = 0; b < tblock && i + b < n; ++b) {
+                T(j, i + b) = right(i + b, j);
+            }
         }
     }
 
-    for (size_t k = 0; k < p; k += left_col) {
-        const size_t tile_k_bound = MIN(k + left_col, p);
-        for(size_t i = 0; i < m; i += left_row) {
-            const size_t tile_i_bound = MIN(i + left_row, m);
+    for(size_t i = 0; i < m; i += left_row) {
+        const size_t tile_i_bound = MIN(i + left_row, m);
+        for (size_t k = 0; k < p; k += left_col) {
+            const size_t tile_k_bound = MIN(k + left_col, p);
             for (size_t j = 0; j < n; j += right_col) {
                 const size_t tile_j_bound = MIN(j + right_col, n);
-                for (size_t tile_k = k; tile_k < tile_k_bound; ++tile_k) {                    
-                    for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
-                        const double r = left(tile_i, tile_k);                        
-                        for (size_t tile_j = j; tile_j < tile_j_bound; ++tile_j) {        
+                for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
+                    // const double r = left(tile_i, tile_k);
+                    for (size_t tile_j = j; tile_j < tile_j_bound; ++tile_j) {
+                        double sum = 0.0;
+                        for (size_t tile_k = k; tile_k < tile_k_bound; ++tile_k) {
                             // ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
                             
                             // Ref: https://edisonx.pixnet.net/blog/post/91005914
-                            ret(tile_i, tile_j) += r * T(tile_j, tile_k); // transpose version, slower
+                            sum += left(tile_i, tile_k) * T(tile_j, tile_k); // transpose version
                         }
+
+                        ret(tile_i, tile_j) += sum;
+
+                    // loop unrolling
+                    /*size_t tile_j = j;
+                    for (; tile_j < tile_j_bound - 10; tile_j += 10) {
+                        ret(tile_i, tile_j) += r * T(tile_j, tile_k); // transpose version
+                        ret(tile_i, tile_j + 1) += r * T(tile_j + 1, tile_k); // transpose version
+                        ret(tile_i, tile_j + 2) += r * T(tile_j + 2, tile_k); // transpose version
+                        ret(tile_i, tile_j + 3) += r * T(tile_j + 3, tile_k); // transpose version
+                        ret(tile_i, tile_j + 4) += r * T(tile_j + 4, tile_k); // transpose version
+                        ret(tile_i, tile_j + 5) += r * T(tile_j + 5, tile_k); // transpose version
+                        ret(tile_i, tile_j + 6) += r * T(tile_j + 6, tile_k); // transpose version
+                        ret(tile_i, tile_j + 7) += r * T(tile_j + 7, tile_k); // transpose version
+                        ret(tile_i, tile_j + 8) += r * T(tile_j + 8, tile_k); // transpose version
+                        ret(tile_i, tile_j + 9) += r * T(tile_j + 9, tile_k); // transpose version
+                    }
+
+                    for (; tile_j < tile_j_bound; ++tile_j) {
+                        ret(tile_i, tile_j) += r * T(tile_j, tile_k); // transpose version
+                    }*/
+
                     }
                 }
             }
