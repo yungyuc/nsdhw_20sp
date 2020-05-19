@@ -8,11 +8,12 @@ Tiler::Tiler(const Matrix &mat1, const Matrix &mat2, size_t tsize)
     : m_mat1(mat1.nrow()/tsize + 1), m_mat2(mat2.ncol()/tsize + 1)
 {
     //Load Matrix 1
-    size_t init_b_mid=mat1.ncol()%tsize;
     size_t b_row=mat1.nrow()%tsize;
+    size_t mem_reserved = mat1.ncol()/tsize+1;
     for (size_t it=0, id=0; it<mat1.nrow(); it+=b_row, ++id, b_row=tsize)
     {
-        for (size_t jt=0, b_mid=init_b_mid; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
+        m_mat1[id].reserve(mem_reserved);
+        for (size_t jt=0, b_mid=mat1.ncol()%tsize; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
         {
             m_mat1[id].push_back(load1(mat1, it, jt, b_row, b_mid));
         }
@@ -22,7 +23,8 @@ Tiler::Tiler(const Matrix &mat1, const Matrix &mat2, size_t tsize)
     size_t b_col=mat2.ncol()%tsize;
     for (size_t kt=0, id=0; kt<mat2.ncol(); kt+=b_col, ++id, b_col=tsize)
     {
-        for (size_t jt=0, b_mid=init_b_mid; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
+        m_mat2[id].reserve(mem_reserved);
+        for (size_t jt=0, b_mid=mat1.ncol()%tsize; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
         {
             m_mat2[id].push_back(load2(mat2, jt, kt, b_col, b_mid));
         }
@@ -38,16 +40,14 @@ Matrix Tiler::load1(Matrix const & mat1, size_t it1, size_t jt1, size_t NDIM_row
     //const size_t nrow1 = mat1.nrow();
     Matrix ret(NDIM_row, NDIM_mid);
     const size_t ncol1 = mat1.ncol();
-    size_t base_s1=it1*ncol1+jt1;
-    size_t base_t1=0;
     for (size_t i=0; i<NDIM_row; ++i)
     {
+        size_t base_s1=(it1+i)*ncol1+jt1;
+        size_t base_t1=i*NDIM_mid;
         for (size_t j=0; j<NDIM_mid; ++j)
         {
             ret(base_t1 + j) = mat1(base_s1 + j);
         }
-        base_t1+=NDIM_mid;
-        base_s1 += ncol1;
     }
     return ret;
 }
@@ -57,16 +57,13 @@ Matrix Tiler::load2(Matrix const & mat2, size_t it2, size_t jt2, size_t NDIM_col
     //const size_t nrow2 = mat2.nrow();
     Matrix ret(NDIM_col, NDIM_mid);
     const size_t ncol2 = mat2.ncol();
-    size_t base_s2=it2*ncol2+jt2;
     for(size_t i=0; i<NDIM_mid; ++i)
     {
-        size_t base_t2=0;
+        size_t base_s2=(it2+i)*ncol2+jt2;
         for (size_t j=0; j<NDIM_col; ++j)
         {
-            ret(base_t2 + i) = mat2(base_s2 + j);
-            base_t2+=NDIM_mid;
+            ret(j*NDIM_mid + i) = mat2(base_s2 + j);
         }
-        base_s2 += ncol2;
     }
     return ret;
 }

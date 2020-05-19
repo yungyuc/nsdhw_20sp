@@ -20,9 +20,6 @@ public:
     size_t nmid() const { return m_nmid; }
     size_t ncol() const { return m_ncol; }
 
-    Matrix& mat1(size_t it, size_t jt) { return m_mat1[it][jt]; }
-    Matrix& mat2(size_t it, size_t jt) { return m_mat2[it][jt]; }
-
 private:
 
     size_t m_nrow;

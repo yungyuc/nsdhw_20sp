@@ -38,8 +38,10 @@ public:
     {
         const size_t ncol = mat.ncol();
 
-        for (size_t i=0, base_s=0, base_t=it*ncol+jt; i<m_nrow; ++i, base_s+=m_ncol, base_t+=ncol)
+        for (size_t i=0; i<m_nrow; ++i)
         {
+            size_t base_s = i*m_ncol;
+            size_t base_t = (it+i)*ncol+jt;
             for (size_t j=0; j<m_ncol; ++j)
             {
                 mat(base_t + j) = m_buffer.at(base_s + j);
