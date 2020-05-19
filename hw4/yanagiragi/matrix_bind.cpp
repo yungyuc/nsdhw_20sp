@@ -111,7 +111,7 @@ Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize)
                 const size_t tile_j_bound = MIN(j + right_col, n);
                 for (size_t tile_k = k; tile_k < tile_k_bound; ++tile_k) {                    
                     for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
-                        auto r = left(tile_i, tile_k);                        
+                        const double r = left(tile_i, tile_k);                        
                         for (size_t tile_j = j; tile_j < tile_j_bound; ++tile_j) {        
                             ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
                             
