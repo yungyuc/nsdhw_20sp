@@ -5,6 +5,7 @@
 #include <mkl.h>
 
 #define COL_MAJOR
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
 namespace py = pybind11;
 
@@ -84,46 +85,40 @@ Matrix multiply_mkl (const Matrix &left, const Matrix& right)
     return ret;
 }
 
-
-Matrix multiply_tiling (const Matrix &left, const Matrix& right, size_t cacheline) 
+Matrix multiply_tiling (Matrix &left, Matrix& right, size_t tsize) 
 {
     if (left.ncol() != right.nrow()) {
         throw std::out_of_range("Error Size");
-    }
-
-    Matrix ret(left.nrow(), right.ncol());
-
-    for(size_t i = 0; i < left.nrow(); ++i) {
-        for (size_t j = 0; j < right.ncol(); ++j) {
-            ret(i, j) = 0.0;
-        }
-    }
-
-    const size_t blocksize = cacheline / sizeof(double);
+    }    
     
-    for(size_t i = 0; i < ret.nrow(); i += blocksize) {
-        const bool isExceedBound = ((i + blocksize) > ret.nrow());
-        const size_t index_i = isExceedBound ? ret.nrow() : (i + blocksize); // clamp the size if out of bound
-        
-        for (size_t j = 0; j < ret.ncol(); j += blocksize) {
-            const bool isExceedBound = ((j + blocksize) > ret.ncol());
-            const size_t index_j = isExceedBound ? ret.ncol() : (j + blocksize);
+    auto m = left.nrow();
+    auto n = right.ncol();
+    auto p = left.ncol();
 
-            for (size_t k = 0; k < left.ncol(); k += blocksize) {
-                const bool isExceedBound = ((k + blocksize) > left.ncol());
-                const size_t index_k = isExceedBound ? left.ncol() : (k + blocksize);
+    // tiling size
+    const size_t left_row = m / tsize;
+    const size_t left_col = p / tsize;
+    const size_t right_col = n / tsize;
 
-                // do multiplication in blocks
-                for (size_t tile_i = i; tile_i < index_i; ++tile_i) {
-                    for (size_t tile_j = j; tile_j < index_j; ++tile_j) {
-                        double v = 0;
-                        for (size_t tile_k = k; tile_k < index_k; ++tile_k) {
-                            v += left(tile_i, tile_k) * right(tile_k, tile_j);
+    Matrix ret(m, n);
+    
+    // right.transpose();
+    
+    for (size_t k = 0; k < p; k += left_col) {
+        for(size_t i = 0; i < m; i += left_row) {
+            for (size_t j = 0; j < n; j += right_col) {
+                for (size_t tile_k = k; tile_k < MIN(k + left_col, p); ++tile_k) {                 
+                    for (size_t tile_i = i; tile_i < MIN(i + left_row, m); ++tile_i) {    
+                        auto r = left(tile_i, tile_k);
+                        for (size_t tile_j = j; tile_j < MIN(j + right_col, n); ++tile_j) {        
+                            ret(tile_i, tile_j) += r * right(tile_k, tile_j); // tiling version
+                            
+                            // Ref: https://edisonx.pixnet.net/blog/post/91005914
+                            // However transpose version seems to be slower
+                            // ret(tile_i, tile_j) += r * right(tile_j, tile_k); // transpose version, slower
                         }
-                        ret(tile_i, tile_j) += v; // use += instead of =
                     }
                 }
-
             }
         }
     }

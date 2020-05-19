@@ -1,4 +1,4 @@
-all: main
+all: main pybind
 
 CC=g++
 OUTPUTFILE=a.out

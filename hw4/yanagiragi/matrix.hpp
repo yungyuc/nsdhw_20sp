@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <vector>
 #include <stdexcept>
+#include <cstring>
 
 class Matrix {
 
@@ -113,6 +114,13 @@ class Matrix {
         double buffer(size_t i) const { return m_buffer[i]; }
         std::vector<double> buffer_vector() const { return std::vector<double>(m_buffer, m_buffer+size()); }
 
+        Matrix & transpose()
+        {
+            m_transpose = !m_transpose;
+            std::swap(m_nrow, m_ncol);
+            return *this;
+        }
+
         double * data() const { return m_buffer; }
 
     private:
@@ -120,9 +128,19 @@ class Matrix {
         size_t index(size_t row, size_t col) const
         {
             #ifdef ROW_MAJOR
-                return col + row * m_ncol; // row major
+                if (m_transpose) { 
+                    return row + col * m_nrow; 
+                }
+                else {
+                    return row * m_ncol + col; 
+                }
             #else
-                return row + col * m_nrow; // col major
+                if (m_transpose) { 
+                    return col + row * m_ncol; 
+                }
+                else {
+                    return row + col * m_nrow; 
+                }
             #endif
         }
 
@@ -134,9 +152,16 @@ class Matrix {
             else          { m_buffer = nullptr; }
             m_nrow = nrow;
             m_ncol = ncol;
+
+            for(size_t i = 0; i < nrow; ++i) {
+                for (size_t j = 0; j < ncol; ++j) {
+                    m_buffer[index(i, j)] = 0.0;
+                }
+            }
         }
 
         size_t m_nrow = 0;
         size_t m_ncol = 0;
         double * m_buffer = nullptr;
+        bool m_transpose = false;
 };
