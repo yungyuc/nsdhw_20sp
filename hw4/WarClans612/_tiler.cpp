@@ -5,29 +5,69 @@
 
 // default contructor
 Tiler::Tiler(const Matrix &mat1, const Matrix &mat2, size_t tsize)
-    : m_mat1(mat1.nrow()/tsize + 1), m_mat2(mat2.ncol()/tsize + 1)
 {
-    //Load Matrix 1
-    size_t b_row=mat1.nrow()%tsize;
-    size_t mem_reserved = mat1.ncol()/tsize+1;
-    for (size_t it=0, id=0; it<mat1.nrow(); it+=b_row, ++id, b_row=tsize)
+    size_t rem_row1 = mat1.nrow()%tsize; //Remaining block size if not divisible by tsize
+    size_t ret_row1 = mat1.nrow() - rem_row1; //Row count of tsize block
+    size_t rem_col1 = mat1.ncol()%tsize; //Remaining block size if not divisible by tsize
+    size_t ret_col1 = mat1.ncol() - rem_col1; //Column count of tsize block
+
+    for (size_t it=0; it<ret_row1; it+=tsize)
     {
-        m_mat1[id].reserve(mem_reserved);
-        for (size_t jt=0, b_mid=mat1.ncol()%tsize; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
+        std::vector<Matrix> temp;
+        for (size_t jt=0; jt<ret_col1; jt+=tsize)
         {
-            m_mat1[id].push_back(load1(mat1, it, jt, b_row, b_mid));
+            temp.push_back(load1(mat1, it, jt, tsize, tsize));
         }
+        if (rem_col1 != 0)
+        {
+            temp.push_back(load1(mat1, it, ret_col1, tsize, rem_col1));
+        }
+        m_mat1.push_back(temp);
+    }
+    if (rem_row1 != 0)
+    {
+        std::vector<Matrix> temp;
+        for (size_t jt=0; jt<ret_col1; jt+=tsize)
+        {
+            temp.push_back(load1(mat1, ret_row1, jt, rem_row1, tsize));
+        }
+        if (rem_col1 != 0)
+        {
+            temp.push_back(load1(mat1, ret_row1, ret_col1, rem_row1, rem_col1));
+        }
+        m_mat1.push_back(temp);
     }
 
-    //Load Matrix 2
-    size_t b_col=mat2.ncol()%tsize;
-    for (size_t kt=0, id=0; kt<mat2.ncol(); kt+=b_col, ++id, b_col=tsize)
+    size_t rem_row2 = mat2.ncol()%tsize; //Remaining block size if not divisible by tsize
+    size_t ret_row2 = mat2.ncol() - rem_row2; //Row count of tsize block
+    size_t rem_col2 = mat1.ncol()%tsize; //Remaining block size if not divisible by tsize
+    size_t ret_col2 = mat1.ncol() - rem_col2; //Column count of tsize block
+
+    for (size_t it=0; it<ret_row2; it+=tsize)
     {
-        m_mat2[id].reserve(mem_reserved);
-        for (size_t jt=0, b_mid=mat1.ncol()%tsize; jt<mat1.ncol(); jt+=b_mid, b_mid=tsize)
+        std::vector<Matrix> temp;
+        for (size_t jt=0; jt<ret_col2; jt+=tsize)
         {
-            m_mat2[id].push_back(load2(mat2, jt, kt, b_col, b_mid));
+            temp.push_back(load2(mat2, jt, it, tsize, tsize));
         }
+        if (rem_col2 != 0)
+        {
+            temp.push_back(load2(mat2, ret_col2, it, tsize, rem_col2));
+        }
+        m_mat2.push_back(temp);
+    }
+    if (rem_row2 != 0)
+    {
+        std::vector<Matrix> temp;
+        for (size_t jt=0; jt<ret_col2; jt+=tsize)
+        {
+            temp.push_back(load2(mat2, jt, ret_row2, rem_row2, tsize));
+        }
+        if (rem_col2 != 0)
+        {
+            temp.push_back(load2(mat2, ret_col2, ret_row2, rem_row2, rem_col2));
+        }
+        m_mat2.push_back(temp);
     }
 
     m_nrow = m_mat1.size();
@@ -68,19 +108,16 @@ Matrix Tiler::load2(Matrix const & mat2, size_t it2, size_t jt2, size_t NDIM_col
     return ret;
 }
 
-void Tiler::multiply(Matrix &m_ret, size_t it, size_t jt, size_t kt)
+void Tiler::multiply(Matrix &m_ret, Matrix &left, Matrix &right)
 {
-    Matrix* left = &m_mat1[it][jt];
-    Matrix* right = &m_mat2[kt][jt];
-
-    for (size_t i=0; i<left->nrow(); ++i)
+    for (size_t i=0; i<left.nrow(); ++i)
     {
-        for (size_t k=0; k<right->nrow(); ++k)
+        for (size_t k=0; k<right.nrow(); ++k)
         {
             double v = 0;
-            for (size_t j=0; j<left->ncol(); ++j)
+            for (size_t j=0; j<left.ncol(); ++j)
             {
-                v += (*left)(i, j) * (*right)(k, j);
+                v += left(i, j) * right(k, j);
             }
             m_ret(i, k) += v;
         }

@@ -41,7 +41,7 @@ Matrix::Matrix(std::vector<std::vector<double>> const & other)
         m_buffer.insert(m_buffer.end(), v.begin(), v.end()); 
 }
 
-inline void validate_multiplication(const Matrix &mat1, const Matrix &mat2)
+void validate_multiplication(const Matrix &mat1, const Matrix &mat2)
 {
     if (mat1.m_ncol != mat2.m_nrow)
     {
@@ -99,18 +99,22 @@ Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, const int tsize)
     // New matrix to be returned
     Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
-    for (size_t it=0, save_i=0, b_row=mat1.m_nrow%tsize; it<tiler.nrow(); it++, save_i+=b_row, b_row=tsize)
+    for (size_t it=0, save_i=0; it<tiler.nrow(); it++)
     {
-        for (size_t kt=0, save_k=0, b_col=mat2.m_ncol%tsize; kt<tiler.ncol(); kt++, save_k+=b_col, b_col=tsize)
+        size_t b_row = tiler.mat1()[it][0].nrow();
+        for (size_t kt=0, save_k=0; kt<tiler.ncol(); kt++)
         {
+            size_t b_col = tiler.mat2()[kt][0].nrow();
             Matrix value(b_row, b_col);
 
             for (size_t jt=0; jt<tiler.nmid(); jt++)
             {
-                tiler.multiply(value, it, jt, kt);
+                tiler.multiply(value, tiler.mat1()[it][jt], tiler.mat2()[kt][jt]);
             }
             value.save(ret, save_i, save_k);
+            save_k += b_col;
         }
+        save_i += b_row;
     }
 
     return ret;
