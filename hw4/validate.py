@@ -31,7 +31,7 @@ fi
 fail_msg="*** validation failed"
 
 echo "INFO: 'make clean' must work"
-make clean ; ret=$
+make clean ; ret=$?
 if [ 0 -ne $ret ] ; then echo "$fail_msg" ; exit $ret ; fi
 
 if [ -n "$(ls _matrix*.so 2> /dev/null)" ] ; then
