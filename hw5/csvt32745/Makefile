@@ -5,6 +5,7 @@ UNAME_S := $(shell uname -s)
 MKLROOT ?= /opt/intel/mkl
 MKLEXT ?= so
 CXXFLAGS :=
+NUMPY_PATH := $(shell python -c "import numpy;print(numpy.get_include())")
 
 ifeq ($(UNAME_S),Linux)
 MKLROOT := ${HOME}/opt/conda
@@ -28,6 +29,8 @@ PYBINDLINE := \
 CXX = g++
 CXXFLAGS := ${CXXFLAGS} \
 	-I${MKLROOT}/include \
+	-I${NUMPY_PATH} \
+	-I ./ \
 	${PYBINDLINE} \
 	${MKLLINKLINE} \
 	-lpthread -lm -ldl
@@ -36,8 +39,9 @@ SRC_NAME=matrix
 
 .PHONY: default
 default: _matrix
-_matrix: matrix.cpp
-	${CXX} $^ ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
+_matrix: matrix.hpp
+	${CXX} ../mod.cpp ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
+	# ${CXX} $^ ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
 
 .PHONY: clean
 clean:
