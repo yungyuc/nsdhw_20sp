@@ -94,34 +94,27 @@ Matrix multiply_tile(const Matrix &mat1, const Matrix &mat2, const int tsize)
 {
     validate_multiplication(mat1, mat2);
 
-    const size_t m = mat1.nrow();
-    const size_t n = mat2.ncol();
-    const size_t p = mat1.ncol();
-
-    // tiling size
-    const size_t left_row = tsize;
-    const size_t left_col = tsize;
-    const size_t right_col = tsize;
+    Tiler tiler(mat1, mat2, tsize);
 
     // New matrix to be returned
     Matrix ret(mat1.m_nrow, mat2.m_ncol);
 
-    for (size_t k = 0; k < p; k += left_col) {
-        const size_t tile_k_bound = std::min(k + left_col, p);
-        for(size_t i = 0; i < m; i += left_row) {
-            const size_t tile_i_bound = std::min(i + left_row, m);
-            for (size_t j = 0; j < n; j += right_col) {
-                const size_t tile_j_bound = std::min(j + right_col, n);
-                for (size_t tile_k = k; tile_k < tile_k_bound; ++tile_k) {                    
-                    for (size_t tile_i = i; tile_i < tile_i_bound; ++tile_i) {
-                        const double r = mat1(tile_i, tile_k);                        
-                        for (size_t tile_j = j; tile_j < tile_j_bound; ++tile_j) {        
-                            ret(tile_i, tile_j) += r * mat2(tile_k, tile_j); // tiling version
-                        }
-                    }
-                }
+    for (size_t it=0, save_i=0; it<tiler.nrow(); it++)
+    {
+        size_t b_row = tiler.mat1()[it][0].nrow();
+        for (size_t kt=0, save_k=0; kt<tiler.ncol(); kt++)
+        {
+            size_t b_col = tiler.mat2()[kt][0].nrow();
+            Matrix value(b_row, b_col);
+
+            for (size_t jt=0; jt<tiler.nmid(); jt++)
+            {
+                tiler.multiply(value, tiler.mat1()[it][jt], tiler.mat2()[kt][jt]);
             }
+            value.save(ret, save_i, save_k);
+            save_k += b_col;
         }
+        save_i += b_row;
     }
 
     return ret;
