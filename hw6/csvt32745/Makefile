@@ -7,11 +7,11 @@ MKLEXT ?= so
 CXXFLAGS :=
 NUMPY_PATH := $(shell python -c "import numpy;print(numpy.get_include())")
 
-ifeq ($(UNAME_S),Linux)
-MKLROOT := ${HOME}/opt/conda
-MKLEXT := so
-CXXFLAGS := -Wl,--no-as-needed
-endif
+# ifeq ($(UNAME_S),Linux)
+# MKLROOT := ${HOME}/opt/conda
+# MKLEXT := so
+# CXXFLAGS := -Wl,--no-as-needed
+# endif
 
 
 MKLLINKLINE := \
@@ -22,7 +22,7 @@ MKLLINKLINE := \
 	
 
 PYBINDLINE := \
-	-O3 -Wall -shared -std=c++11 \
+	-O3 -Wall -shared -std=c++17 \
 	-fPIC `python3 -m pybind11 --includes` \
 	# $^ -o $@`python3-config --extension-suffix`
 
