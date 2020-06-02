@@ -1,13 +1,11 @@
 #include <iostream>
 #include <vector>
-/*#include <array>
-#include <sstream>*/
 /*#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11/operators.h"
 #include "pybind11/numpy.h"*/
-#include </home/asministrateur/intel/compilers_and_libraries_2020.1.217/linux/mkl/include/mkl.h> 
-//#include "mkl.h"
+//#include </home/asministrateur/intel/compilers_and_libraries_2020.1.217/linux/mkl/include/mkl.h> 
+#include "mkl.h"
 
 
 namespace py = pybind11;

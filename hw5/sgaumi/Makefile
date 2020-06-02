@@ -9,8 +9,8 @@ CXXFLAGS :=
 endif
 
 ifeq ($(UNAME_S),Linux)
-MKLROOT ?= /home/asministrateur/anaconda3
-#MKLROOT ?= ${HOME}/opt/conda
+#MKLROOT ?= /home/asministrateur/anaconda3
+MKLROOT ?= ${HOME}/opt/conda
 MKLEXT ?= so
 CXXFLAGS := -Wl,--no-as-needed
 endif
