@@ -22,15 +22,15 @@ MKLLINKLINE := \
 	
 
 PYBINDLINE := \
-	-O3 -Wall -shared -std=c++17 \
+	-O3 -Wall -shared -std=c++11 \
 	-fPIC `python3 -m pybind11 --includes` \
 	# $^ -o $@`python3-config --extension-suffix`
 
 CXX = g++
 CXXFLAGS := ${CXXFLAGS} \
 	-I${MKLROOT}/include \
-	-I${NUMPY_PATH} \
 	-I ./ \
+	-I${NUMPY_PATH} \
 	${PYBINDLINE} \
 	${MKLLINKLINE} \
 	-lpthread -lm -ldl
@@ -40,7 +40,7 @@ SRC_NAME=matrix
 .PHONY: default
 default: _matrix
 _matrix: matrix.hpp
-	${CXX} ../mod.cpp ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
+	${CXX} ./bind.cpp ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
 	# ${CXX} $^ ${CXXFLAGS} -o $@`python3-config --extension-suffix` 
 
 .PHONY: clean
