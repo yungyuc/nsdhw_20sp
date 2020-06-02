@@ -24,15 +24,14 @@ MKLLINKLINE := \
 
 CXX = g++
 CXXFLAGS := ${CXXFLAGS} \
-	-std=c++14 -O3 -g -m64 \
-	-Wall -Wextra  -shared \
+	-std=c++17 -O3 -g -m64 \
+	-shared \
 	-I${MKLROOT}/include \
 	-I${NUMPYROOT} \
 	${MKLLINKLINE} \
 	${FLAGS}
 
-CXXGCOMPILE := -std=c++14 -O3 \
-	-Wall -Wextra  \
+CXXGCOMPILE := -std=c++17 -O3 \
 	-I${NUMPYROOT}
 
 CXX = g++
@@ -63,5 +62,5 @@ clean:
 test: clean _matlink Makefile
 	#$(CXX) -o matrix matrix.o _tiler.o _block.o
 	#./matrix
-	#python testmatrix.py
+	#python test_matrix.py
 	py.test -v -l
