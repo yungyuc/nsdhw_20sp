@@ -2,7 +2,6 @@
 #include "pybind11/stl.h"
 #include "pybind11/numpy.h"
 #include "pybind11/operators.h"
-#include "pybind11/pytypes.h"
 
 #include "matrix.hpp"
 
@@ -30,27 +29,14 @@ PYBIND11_MODULE(_matrix, m){
                 { sizeof(double)*m.ncol(), sizeof(double) }
             );
         })
-        .def("array", [](Matrix &m) -> py::array_t<double>{
-            
-            /*  allocate the buffer */
-            size_t arr_size = m.size();
-            py::array_t<double> result = py::array_t<double>(arr_size);
-
-            py::capsule free_when_done(m.data(), [](void *f) {
-                double *foo = reinterpret_cast<double *>(f);
-                // std::cerr << "Element [0] = " << foo[0] << "\n";
-                // std::cerr << "freeing memory @ " << f << "\n";
-                delete[] foo;
-            });
-
-            return py::array_t<double, py::array::c_style|py::array::forcecast>(
+        .def_property("array", [](Matrix &m) {
+            return py::array_t<double>(
                 { m.nrow(), m.ncol() },
                 { sizeof(double)*m.ncol(), sizeof(double) },
                 m.data(),
-                free_when_done
+                py::cast(m)
             );
-
-            })
+        }, nullptr)
         .def("__setitem__", [](Matrix &m, std::array<double, 2> tp, double val){
             m.set_data(tp[0], tp[1], val);
         })
