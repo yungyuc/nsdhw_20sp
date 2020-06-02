@@ -25,7 +25,10 @@ MKLLINKLINE := \
 	-lpthread -lm -ldl
 
 PYBINDLINE := -fPIC `python3 -m pybind11 --includes` \
-	-std=c++11 -shared -O3
+	-std=c++17 -shared -O3
+
+BY_MOD := $(shell python3 -c "import numpy; print(numpy.get_include())") \
+		-I ./
 
 CXX = g++
 CXXFLAGS := ${CXXFLAGS} \
@@ -33,23 +36,24 @@ CXXFLAGS := ${CXXFLAGS} \
 	$(PYBINDLINE) \
 	-I${MKLROOT}/include \
 	${MKLLINKLINE} \
-	${FLAGS}
+	${FLAGS} \
+	-I${BY_MOD}
 
-
+MODNAME := ../mod.cpp
 
 .PHONY: default
 default: matrix
 
-matrix: _matrix.cpp
-	${CXX} ${CXXFLAGS} _matrix.cpp -o _matrix`python3-config --extension-suffix`
+matrix: matrix.hpp
+	${CXX} ${CXXFLAGS} ${MODNAME} -o _matrix`python3-config --extension-suffix`
 
 .PHONY: test
 test:
-	${CXX} ${CXXFLAGS} _matrix.cpp -o _matrix`python3-config --extension-suffix`
+	${CXX} ${CXXFLAGS} ${MODNAME} -o _matrix`python3-config --extension-suffix`
 	pytest
 	cat performance.txt
 
 .PHONY: clean
 clean:
-	rm -frd *.so __pycache__ .pytest_cache performance.txt _matrix
+	rm -frd *.so __pycache__ ../__pycache__ .pytest_cache ../.pytest_cache  performance.txt _matrix
 	touch performance.txt

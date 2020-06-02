@@ -1,9 +1,11 @@
 #include <iostream>
 #include <vector>
-#include "pybind11/pybind11.h"
+/*#include <array>
+#include <sstream>*/
+/*#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11/operators.h"
-#include "pybind11/numpy.h"
+#include "pybind11/numpy.h"*/
 #include </home/asministrateur/intel/compilers_and_libraries_2020.1.217/linux/mkl/include/mkl.h> 
 //#include "mkl.h"
 
@@ -77,7 +79,7 @@ public:
         return *this;
     }
 
-	bool operator==(Matrix const & other)
+	bool operator==(Matrix const & other) const
     {
         if (this == &other) { return true; }
         if (m_nrow != other.m_nrow || m_ncol != other.m_ncol)
@@ -356,7 +358,7 @@ Matrix multiply_tile(const Matrix& a, const Matrix& b, size_t tile_size)
 
 
 
-
+/*
 PYBIND11_MODULE(_matrix, m){
     m.def("multiply_naive", &multiply_naive);
     m.def("multiply_mkl", &multiply_mkl);
@@ -372,14 +374,14 @@ PYBIND11_MODULE(_matrix, m){
         .def_property("nrow", &Matrix::nrow, nullptr)
         .def_property("ncol", &Matrix::ncol, nullptr)
         .def("__eq__", &Matrix::operator==)
-        /*.def("__repr__", [](Matrix const& m){
+        .def("__repr__", [](Matrix const& m){
             for (size_t i=0;i<m.nrow();i++){
 				for (size_t j=0;j<m.ncol();j++){
 					std::cout<<m(i,j)<<" ";
 				}
 				std::cout<<std::endl;
 			}
-        })*/
+        })
 		.def("__setitem__", [](Matrix &m, std::pair<size_t,size_t> p, double val){
             m(p.first, p.second)= val;
         })
@@ -387,6 +389,6 @@ PYBIND11_MODULE(_matrix, m){
             return m(p.first, p.second);
         })
         ;
-}
+}*/
 
 
