@@ -7,11 +7,11 @@ MKLEXT ?= so
 CXXFLAGS :=
 NUMPY_PATH := $(shell python -c "import numpy;print(numpy.get_include())")
 
-# ifeq ($(UNAME_S),Linux)
-# MKLROOT := ${HOME}/opt/conda
-# MKLEXT := so
-# CXXFLAGS := -Wl,--no-as-needed
-# endif
+ifeq ($(UNAME_S),Linux)
+MKLROOT := ${HOME}/opt/conda
+MKLEXT := so
+CXXFLAGS := -Wl,--no-as-needed
+endif
 
 
 MKLLINKLINE := \
