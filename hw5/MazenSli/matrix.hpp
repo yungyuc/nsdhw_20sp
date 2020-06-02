@@ -4,13 +4,7 @@
 #include <iterator>  // for back_inserter
 #include <algorithm> // for copy() and assign()
 #include <iomanip>   // std::setw
-#include <pybind11/pybind11.h>
-#include "pybind11/stl.h"
-#include "pybind11/operators.h"
-#include "pybind11/numpy.h"
 #include "mkl.h"
-
-namespace py = pybind11;
 
 class Matrix
 {
@@ -123,7 +117,7 @@ public:
         return m_buffer[row * m_ncol + col];
     }
 
-    bool operator== (Matrix const &other)
+    bool operator== (Matrix const &other) const 
     {
         if (this == &other) return true;
         if (m_nrow != other.m_nrow || m_ncol != other.m_ncol) return false;
@@ -246,40 +240,3 @@ std::ostream &operator<<(std::ostream &ostr, Matrix const &mat)
     return ostr;
 }
 
-PYBIND11_MODULE(_matrix, m)
-{
-    m.doc() = "pybind11 example plugin"; // optional module docstring
-
-    m.def("multiply_naive", &multiply_naive, "Function for naive matrix-matrix-multiplication");
-    m.def("multiply_mkl", &multiply_mkl, "Function for matrix multiplication with gdemm");
-    m.def("multiply_tile", &multiply_tile, "Function for matrix multiplication with tiling");
-
-    py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
-        .def(py::init<size_t, size_t>())
-        .def(py::init<size_t, size_t, std::vector<double>>())
-	.def(py::init<std::vector<std::vector<double>>&>())
-        .def(py::init<Matrix const &>())
-        .def_property("nrow", &Matrix::nrow, nullptr)
-        .def_property("ncol", &Matrix::ncol, nullptr)
-        .def_buffer([](Matrix &m) -> py::buffer_info {
-            return py::buffer_info(
-                m.m_buffer.data(),                       /* Pointer to buffer */
-                sizeof(double),                          /* Size of one scalar */
-                py::format_descriptor<double>::format(), /* Python struct-style format descriptor */
-                2,                                       /* Number of dimensions */
-                {m.nrow(), m.ncol()},                    /* Buffer dimensions */
-                {sizeof(double) * m.ncol(),              /* Strides (in bytes) for each index */
-                 sizeof(double)});
-        })
-	.def("__eq__", &Matrix::operator==)
-	.def("__setitem__", [](Matrix &A, std::pair<size_t, size_t> p, float value) {
-	A(p.first, p.second) = value;
-	})
-        .def("__getitem__", [](Matrix &A, std::pair<size_t, size_t> p) {
-            if (p.first >= A.nrow() || p.second >= A.ncol())
-            {
-                throw py::index_error();
-            }
-            return A(p.first, p.second);
-        });
-}

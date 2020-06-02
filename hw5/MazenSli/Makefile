@@ -9,7 +9,9 @@ MKLLINKLINE := \
 	${MKLROOT}/lib/libmkl_avx2.so \
 	-lpthread -lm -ldl
 
-CXXFLAGS := -O3 -Wall -fPIC -std=c++11 -I${MKLROOT}/include ${MKLLINKLINE}
+NUMPY := $(shell python3 -c "import numpy; print(numpy.get_include())") -I ./
+
+CXXFLAGS := -O3 -Wall -fPIC -std=c++17 -I${MKLROOT}/include ${MKLLINKLINE} -I${NUMPY}
 
 PYBINDFLAGS := -fPIC `python3 -m pybind11 --includes` -shared
 
@@ -17,13 +19,10 @@ PYBINDFLAGS := -fPIC `python3 -m pybind11 --includes` -shared
 default: _matrix
 
 .PHONY: _matrix
-_matrix: _matrix.cpp
-	${CXX} $< ${CXXFLAGS} ${PYBINDFLAGS} -o $@`python3-config --extension-suffix`
+_matrix: matrix.hpp
+	${CXX} ../mod.cpp ${CXXFLAGS} ${PYBINDFLAGS} -o $@`python3-config --extension-suffix`
 
 .PHONY: clean
 clean:
-	rm -frd *.so __pycache__ _matrix performance.txt
+	rm -frd *.so __pycache__ _matrix
 
-.PHONY: test
-test: _matrix
-	pytest -v -l
