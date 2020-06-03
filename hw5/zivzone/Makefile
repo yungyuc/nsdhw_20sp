@@ -1,7 +1,7 @@
 CXX := g++
 CXXFLAGS ?= -std=c++17 -O3 -Wall
 SRC = matrix.hpp
-TARGET = _matrix
+TARGET = _matrix.cpython-37m-x86_64-linux-gnu.so
 TEST = test_matrix.py
 BENCH = performance.py
 NUMPY_PATH := $(shell python -c "import numpy;print(numpy.get_include())")
