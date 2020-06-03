@@ -1,6 +1,6 @@
 CXX := g++
 CXXFLAGS ?= -std=c++17 -O3 -Wall
-SRC = matrix.hpp
+SRC = matrix.cpp
 TARGET = _matrix
 TEST = test_matrix.py
 BENCH = performance.py
@@ -21,7 +21,7 @@ CXXFLAGS := ${CXXFLAGS} \
 all: $(TARGET)
 
 $(TARGET): $(SRC)
-	$(CXX) ../mod.cpp $(CXXFLAGS) $(INCLUDES) -o $@`python3-config --extension-suffix` 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@`python3-config --extension-suffix` 
 	#$(CXX) $(CXXFLAGS) $(INCLUDES) $< -o $(TARGET) $(LDFLAGS)
 
 format: $(SRC) $(TEST) $(BENCH)
