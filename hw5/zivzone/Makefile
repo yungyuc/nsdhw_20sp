@@ -6,7 +6,8 @@ TEST = test_matrix.py
 BENCH = performance.py
 NUMPY_PATH := $(shell python -c "import numpy;print(numpy.get_include())")
 
-MKLROOT ?= ${HOME}/opt/conda
+#MKLROOT ?= ${HOME}/opt/conda
+MKLROOT ?= /opt/intel/mkl
 CXXFLAGS := -Wl,--no-as-needed
 #############
 MKLLINKLINE := \
