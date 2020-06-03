@@ -21,7 +21,7 @@ CXXFLAGS := ${CXXFLAGS} \
 all: $(TARGET)
 
 $(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@`python3-config --extension-suffix` 
+	$(CXX) mod.cpp $(CXXFLAGS) $(INCLUDES) -o $@`python3-config --extension-suffix` 
 	#$(CXX) $(CXXFLAGS) $(INCLUDES) $< -o $(TARGET) $(LDFLAGS)
 
 format: $(SRC) $(TEST) $(BENCH)
