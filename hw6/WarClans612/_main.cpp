@@ -29,6 +29,14 @@ PYBIND11_MODULE(_matrix, m) {
                 { sizeof(double) * m.ncol(), sizeof(double)}
             );
         })
+        .def_property("array", [] (Matrix &m) {
+            return py::array_t<double>(
+                { m.nrow(), m.ncol() },
+                { sizeof(double) * m.ncol(), sizeof(double)},
+                m.data(),
+                py::cast(m)
+            );
+        }, nullptr)
         .def("__eq__", &Matrix::operator==)
         .def("__setitem__", [](Matrix &mat1, std::pair<size_t, size_t> i, double v) {
             mat1(i.first, i.second) = v;
