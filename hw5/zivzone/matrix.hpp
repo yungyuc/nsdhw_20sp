@@ -13,10 +13,12 @@ public:
   Matrix &operator=(Matrix &&) = default;
   ~Matrix() = default;
 
-  double   operator() (size_t i, size_t j) const { if (i >= m_nrow || j >= m_ncol) throw pybind11::index_error(); return matrix_data[i * m_ncol + j];}
+  //double   operator() (size_t i, size_t j) const { if (i >= m_nrow || j >= m_ncol) throw pybind11::index_error(); return matrix_data[i * m_ncol + j];}
+  double   operator() (size_t i, size_t j) const { return matrix_data[i * m_ncol + j];}
 
 
-  double & operator() (size_t i, size_t j)       { if (i >= m_nrow || j >= m_ncol) throw pybind11::index_error(); return matrix_data[i * m_ncol + j];}
+  //double & operator() (size_t i, size_t j)       { if (i >= m_nrow || j >= m_ncol) throw pybind11::index_error(); return matrix_data[i * m_ncol + j];}
+  double & operator() (size_t i, size_t j)       { return matrix_data[i * m_ncol + j];}
 
   constexpr size_t nrow() const { return m_nrow; }
   constexpr size_t ncol() const { return m_ncol; }
