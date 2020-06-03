@@ -7,7 +7,7 @@ BENCH = performance.py
 NUMPY_PATH := $(shell python -c "import numpy;print(numpy.get_include())")
 
 MKLROOT ?= ${HOME}/opt/conda
-
+#CXXFLAGS := -Wl,--no-as-needed
 #############
 MKLLINKLINE := \
 	${MKLROOT}/lib/libmkl_intel_lp64.so \
@@ -15,7 +15,7 @@ MKLLINKLINE := \
 	${MKLROOT}/lib/libmkl_core.so \
 	${MKLROOT}/lib/libmkl_avx2.so \
 	-lpthread -lm -ldl
-CXXFLAGS := -O3 -Wall -fPIC -std=c++17 -I${MKLROOT}/include ${MKLLINKLINE} -I${NUMPY}
+CXXFLAGS := -O3 -Wall -fPIC -std=c++17 -I${MKLROOT}/include ${MKLLINKLINE} -I${NUMPY_PATH}
 
 PYBINDFLAGS := -fPIC `python3 -m pybind11 --includes` -shared
 
@@ -23,7 +23,7 @@ PYBINDFLAGS := -fPIC `python3 -m pybind11 --includes` -shared
 
 #INCLUDES += -m64 -I${MKLROOT}/include
 #LDFLAGS += -L${MKLROOT}/lib -Wl,--no-as-needed \
-	-lmkl_rt -lpthread -lm -ldl
+	#-lmkl_rt -lpthread -lm -ldl
 
 #INCLUDES += `python -m pybind11 --includes`
 #CXXFLAGS += -shared -fPIC
