@@ -1,6 +1,6 @@
 CXX := g++
 CXXFLAGS ?= -std=c++17 -O3 -Wall
-SRC = matrix.cpp
+SRC = matrix.hpp
 TARGET = _matrix
 TEST = test_matrix.py
 BENCH = performance.py
