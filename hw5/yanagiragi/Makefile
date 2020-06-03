@@ -3,6 +3,7 @@ all: main pybind
 CC=g++
 OUTPUTFILE=a.out
 CHECKFILE=performance.txt
+NUMPY_PATH=$(shell python -c "import numpy;print(numpy.get_include())")
 
 # MKL root for conda
 MKL_ROOT=$(HOME)/opt/conda
@@ -18,7 +19,7 @@ MKLLINKLINE := \
 
 MAJOR=ROW_MAJOR
 PYTHON_BIN=python3
-FLAGS=--std=c++14 -I${MKL_ROOT}/include ${MKLLINKLINE} -lpthread -lm -ldl
+FLAGS=--std=c++14 -I${MKL_ROOT}/include -I${NUMPY_PATH} ${MKLLINKLINE} -lpthread -lm -ldl
 # use c++14 for std::conditional_t and etc.
 
 main: pybind
