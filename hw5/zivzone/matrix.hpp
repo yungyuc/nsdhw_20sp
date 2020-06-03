@@ -142,18 +142,18 @@ Matrix multiply_tile(const Matrix &first_matrix, const Matrix &second_matrix, si
   return result_matrix;
 }
 
-PYBIND11_MODULE(_matrix, m) {
-  m.doc() = "class Matrix with  mkl & navie mutply";
-  m.def("multiply_naive", &multiply_naive);
-  m.def("multiply_mkl", &multiply_mkl);
-  m.def("multiply_tile", &multiply_tile);
-  pybind11::class_<Matrix>(m, "Matrix")
-      .def(pybind11::init<size_t, size_t>())
-      .def_property_readonly("nrow", &Matrix::nrow)
-      .def_property_readonly("ncol", &Matrix::ncol)
-      .def("__getitem__", [](const Matrix &m, std::pair<size_t, size_t> it) {return m(it.first, it.second); })
-      .def("__setitem__", [](Matrix &m, std::pair<size_t, size_t> it, double vec) { m(it.first, it.second) = vec; })
-      .def("__eq__"     , [](const Matrix &first_matrix, const Matrix &second_matrix) { return first_matrix == second_matrix; })
-      .def("__ne__"     , [](const Matrix &first_matrix, const Matrix &second_matrix) { return first_matrix != second_matrix; })
-      ;
-}
+#PYBIND11_MODULE(_matrix, m) {
+#  m.doc() = "class Matrix with  mkl & navie mutply";
+#  m.def("multiply_naive", &multiply_naive);
+#  m.def("multiply_mkl", &multiply_mkl);
+#  m.def("multiply_tile", &multiply_tile);
+#  pybind11::class_<Matrix>(m, "Matrix")
+#      .def(pybind11::init<size_t, size_t>())
+#      .def_property_readonly("nrow", &Matrix::nrow)
+#      .def_property_readonly("ncol", &Matrix::ncol)
+#      .def("__getitem__", [](const Matrix &m, std::pair<size_t, size_t> it) {return m(it.first, it.second); })
+#      .def("__setitem__", [](Matrix &m, std::pair<size_t, size_t> it, double vec) { m(it.first, it.second) = vec; })
+#      .def("__eq__"     , [](const Matrix &first_matrix, const Matrix &second_matrix) { return first_matrix == second_matrix; })
+#      .def("__ne__"     , [](const Matrix &first_matrix, const Matrix &second_matrix) { return first_matrix != second_matrix; })
+#      ;
+#}
