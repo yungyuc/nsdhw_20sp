@@ -33,9 +33,9 @@ Time table
     -
   * - 4
     - 08:00 - 08:20
-    -
-    -
-    -
+    - Wei-Lun Huang
+    - GodotMotionMatching
+    - https://github.com/csvt32745/GodotMotionMatching
   * - 5
     - 08:20 - 08:40
     -
