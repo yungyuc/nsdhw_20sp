@@ -23,9 +23,9 @@ Time table
     - https://github.com/sgaumi/compression_decompression_tool
   * - 2
     - 07:20 - 07:40
-    -
-    -
-    -
+    - Wilbert
+    - Tag Generation
+    - https://github.com/WarClans612/Automatic-Tag-Generation-for-Text-Article
   * - 3
     - 07:40 - 08:00
     -
