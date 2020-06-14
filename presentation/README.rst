@@ -19,8 +19,8 @@ Time table
   * - 1
     - 07:00 - 07:20
     - Simeon Gaumart
-    - https://github.com/sgaumi/compression_decompression_tool
     - Compression
+    - https://github.com/sgaumi/compression_decompression_tool
   * - 2
     - 07:20 - 07:40
     -
