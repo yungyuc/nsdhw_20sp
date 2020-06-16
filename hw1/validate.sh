@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Make sure the error message uses English.
+export LC_ALL="en_US.UTF-8"
+
 test_path="${BASH_SOURCE[0]}"
 solution_path="$(realpath .)"
 tmp_dir=$(mktemp -d -t hw1-XXXXXXXXXX)
