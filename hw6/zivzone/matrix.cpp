@@ -150,7 +150,7 @@ PYBIND11_MODULE(_matrix, m) {
   m.def("multiply_mkl", &multiply_mkl);
   m.def("multiply_tile", &multiply_tile);
   //pybind11::class_<Matrix>(m, "Matrix")
-  pyboind11::class_<Matrix>(m, "Matrix", pybind11::buffer_protocol())
+  pybind11::class_<Matrix>(m, "Matrix", pybind11::buffer_protocol())
       .def(pybind11::init<size_t, size_t>())
       .def_property_readonly("nrow", &Matrix::nrow)
       .def_property_readonly("ncol", &Matrix::ncol)
